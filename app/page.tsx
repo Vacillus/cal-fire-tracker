@@ -70,7 +70,14 @@ const FireCard = ({ fire, isSelected, onClick }: { fire: FireData; isSelected: b
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-2">
-        <h3 className="font-semibold text-lg">{fire.name}</h3>
+        <div className="flex items-center gap-2">
+          {fire.status === 'Active' && (
+            <svg className="w-5 h-5 text-red-500 animate-pulse" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 1s-5 4.68-5 10c0 2.76 2.24 5 5 5s5-2.24 5-5c0-5.32-5-10-5-10z"/>
+            </svg>
+          )}
+          <h3 className="font-semibold text-lg">{fire.name}</h3>
+        </div>
         <span className={`text-xs px-2 py-1 rounded-full ${statusColors[fire.status]}`}>
           {fire.status}
         </span>
@@ -178,9 +185,17 @@ const CaliforniaMapView = ({ fires, selectedFire, onFireClick }: {
               />
               
               {/* Fire icon */}
-              <text x={pos.x} y={pos.y + 3} fontSize="16" textAnchor="middle">
-                {fire.status === 'Active' ? '🔥' : '✓'}
-              </text>
+              {fire.status === 'Active' ? (
+                <image 
+                  href="/fire-icon.svg" 
+                  x={pos.x - 12} 
+                  y={pos.y - 12} 
+                  width="24" 
+                  height="24"
+                />
+              ) : (
+                <text x={pos.x} y={pos.y + 3} fontSize="16" textAnchor="middle">✓</text>
+              )}
               
               {/* Fire name */}
               <text x={pos.x} y={pos.y - radius - 5} fontSize="10" fontWeight="bold" fill="#1f2937" textAnchor="middle">
@@ -357,7 +372,12 @@ export default function CAFireWatchDashboard() {
     <div className="flex flex-col lg:flex-row h-screen bg-gray-50">
       {/* Header for mobile */}
       <div className="lg:hidden bg-white shadow-sm p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">🔥 CAL FIRE Tracker</h1>
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <svg className="w-6 h-6 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 1s-5 4.68-5 10c0 2.76 2.24 5 5 5s5-2.24 5-5c0-5.32-5-10-5-10z"/>
+          </svg>
+          CAL FIRE Tracker
+        </h1>
         <button
           onClick={() => setMutationMode(!mutationMode)}
           className={`px-3 py-1 rounded-full text-xs font-medium ${
