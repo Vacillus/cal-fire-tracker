@@ -77,8 +77,6 @@ npx ampx sandbox
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the app.
-
 ### Deployment
 
 The app automatically deploys to AWS Amplify Console on push to main branch.
