@@ -2,8 +2,20 @@
 
 import { useState, useEffect } from 'react';
 
+interface FireIncident {
+  incidentId: string;
+  incidentName: string;
+  county: string;
+  acresBurned: number;
+  containmentPercent: number;
+  latitude: number;
+  longitude: number;
+  isActive: boolean;
+  crewsInvolved: number;
+}
+
 // California SVG Map Component
-const CaliforniaMap = ({ fires }: { fires: any[] }) => {
+const CaliforniaMap = ({ fires }: { fires: FireIncident[] }) => {
   return (
     <div className="relative w-full h-full min-h-[500px] bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl overflow-hidden">
       <svg
@@ -20,7 +32,7 @@ const CaliforniaMap = ({ fires }: { fires: any[] }) => {
         />
         
         {/* Fire indicators */}
-        {fires.map((fire, index) => (
+        {fires.map((fire) => (
           <g key={fire.incidentId}>
             {/* Fire location */}
             <circle
@@ -98,7 +110,7 @@ const CaliforniaMap = ({ fires }: { fires: any[] }) => {
 };
 
 // County Fire Card Component
-const CountyFireCard = ({ incident }: { incident: any }) => {
+const CountyFireCard = ({ incident }: { incident: FireIncident }) => {
   const getStatusColor = (containment: number) => {
     if (containment === 100) return 'text-green-600 bg-green-50';
     if (containment >= 75) return 'text-blue-600 bg-blue-50';
@@ -161,7 +173,6 @@ const CountyFireCard = ({ incident }: { incident: any }) => {
 
 export default function Home() {
   const [mutationMode, setMutationMode] = useState(false);
-  const [selectedCounty, setSelectedCounty] = useState<string | null>(null);
   const [forensicLogs, setForensicLogs] = useState<string[]>([]);
 
   const mockIncidents = [
@@ -258,7 +269,7 @@ export default function Home() {
       
       return () => clearInterval(interval);
     }
-  }, [mutationMode]);
+  }, [mutationMode, mockIncidents.length]);
 
   const activeIncidents = mockIncidents.filter(i => i.isActive);
   const totalAcresBurned = mockIncidents.reduce((sum, i) => sum + i.acresBurned, 0);
