@@ -489,22 +489,22 @@ export default function CAFireWatchDashboard() {
   useEffect(() => {
     if (mutationMode) {
       const initialLogs = [
-        `[${new Date().toISOString()}] FORENSIC_MODE: ACTIVATED`,
-        `[${new Date().toISOString()}] SCAN: ${fireData.length} incidents detected`,
-        `[${new Date().toISOString()}] TRACKING: Mutations enabled`
+        `FORENSIC_MODE: ACTIVATED`,
+        `SCAN: ${fireData.length} incidents detected`,
+        `TRACKING: Mutations enabled`
       ];
       setForensicLogs(initialLogs);
       
       const interval = setInterval(() => {
         const logs = [
-          `MUTATION: Containment update at idx ${Math.floor(Math.random() * fireData.length)}`,
-          `LAMBDA: CAL FIRE API call - ${Math.floor(Math.random() * 300)}ms`,
-          `DYNAMODB: Write confirmed - TTL ${Date.now() + 86400000}`,
+          `MUTATION: Containment update`,
+          `LAMBDA: CAL FIRE API call`,
+          `DYNAMODB: Write confirmed`,
           `ANOMALY: Data variance detected`,
           `SNAPSHOT: State preserved`
         ];
         
-        setForensicLogs(prev => [...prev.slice(-6), `[${new Date().toISOString()}] ${logs[Math.floor(Math.random() * logs.length)]}`]);
+        setForensicLogs(prev => [...prev.slice(-4), logs[Math.floor(Math.random() * logs.length)]]);
       }, 3000);
       
       return () => clearInterval(interval);
@@ -522,60 +522,184 @@ export default function CAFireWatchDashboard() {
   const totalAcres = fireData.reduce((sum, f) => sum + f.acres, 0);
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {/* Navigation Bar */}
-      <NavigationBar
-        mutationMode={mutationMode}
-        setMutationMode={setMutationMode}
-        activeCount={activeCount}
-        totalAcres={totalAcres}
-      />
+    <div className="h-screen flex">
+      <div className="lg:w-1/3 w-80 bg-white border-r border-gray-200 flex flex-col">
+        <div className="p-4 border-b border-gray-200">
+          <div className="grid gap-4">
+            <div>
+              <h1 className="text-base lg:text-lg font-semibold text-blue-900">CAL FIRE</h1>
+              <p className="text-base text-yellow-600">TRACKER</p>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search fires or counties..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <svg className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <div className="flex items-center justify-between text-base">
+              <span className="text-gray-600">{activeCount} Active</span>
+              <span className="text-gray-600">{(totalAcres / 1000).toFixed(0)}K Acres</span>
+              <button
+                onClick={() => setMutationMode(!mutationMode)}
+                className={`px-3 py-1 text-base font-medium rounded-md transition-colors ${
+                  mutationMode 
+                    ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Forensic
+              </button>
+            </div>
+          </div>
+        </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Fire List Sidebar */}
-        <FireListSidebar
-          fires={filteredFires}
-          selectedFire={selectedFire}
-          onSelectFire={setSelectedFire}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-
-        {/* Map Area */}
-        <div className="flex-1 relative">
-          <CaliforniaMap
-            fires={fireData}
-            selectedFire={selectedFire}
-            onFireClick={setSelectedFire}
-          />
-          
-          {/* Fire Detail Panel */}
-          {selectedFire && (
-            <FireInfoPanel
-              fire={selectedFire}
-              onClose={() => setSelectedFire(null)}
-            />
-          )}
-          
-          {/* Forensic Console */}
-          {mutationMode && <ForensicConsole logs={forensicLogs} />}
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid gap-4 p-4">
+            {filteredFires.map((fire) => (
+              <div
+                key={fire.id}
+                onClick={() => setSelectedFire(fire)}
+                className={`p-4 border border-gray-200 rounded-lg cursor-pointer transition-colors hover:bg-gray-50 ${
+                  selectedFire?.id === fire.id ? 'bg-blue-50 border-blue-300' : ''
+                }`}
+              >
+                <div className="flex justify-between items-start">
+                  <h3 className="text-base lg:text-lg font-medium text-gray-900">{fire.name}</h3>
+                  {fire.status === 'Active' && (
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  )}
+                </div>
+                <p className="text-base text-gray-500 mt-1">{fire.county} County</p>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-base text-gray-600">{(fire.acres / 1000).toFixed(1)}K acres</span>
+                  <span className={`text-base font-medium ${
+                    fire.containment === 100 ? 'text-green-600' :
+                    fire.containment >= 50 ? 'text-yellow-600' : 'text-red-600'
+                  }`}>
+                    {fire.containment}%
+                  </span>
+                </div>
+                {fire.evacuation_orders && (
+                  <p className="text-base text-red-600 mt-1">Evacuations active</p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Status Bar */}
-      <div className="bg-white border-t border-gray-200 px-4 py-2">
-        <div className="flex justify-between items-center text-xs text-gray-600">
-          <div className="flex items-center space-x-4">
-            <span>Data Source: CAL FIRE API</span>
-            <span>•</span>
-            <span>Updates every 30 minutes</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span>{fireData.length} Total Incidents</span>
-            <span>•</span>
-            <span>Last updated: {new Date().toLocaleTimeString()}</span>
-          </div>
+      <div className="flex-1 relative h-full w-full z-0">
+        <div className="relative h-full w-full bg-gray-50">
+          <svg viewBox="0 0 500 700" className="w-full h-full">
+            <path
+              d="M 120 50 L 140 70 L 150 100 L 155 140 L 160 180 L 165 220 L 162 260 L 158 300 L 155 340 L 150 380 L 145 420 L 140 460 L 135 500 L 130 540 L 125 580 L 120 620 L 110 650 L 100 640 L 95 600 L 90 560 L 85 520 L 80 480 L 75 440 L 70 400 L 65 360 L 60 320 L 55 280 L 50 240 L 45 200 L 40 160 L 35 120 L 40 80 L 50 60 L 70 45 L 90 40 L 110 45 Z"
+              fill="#fef3c7"
+              stroke="#1e40af"
+              strokeWidth="2"
+            />
+            
+            {filteredFires.map((fire) => {
+              const x = ((fire.lng + 124.5) / 10) * 400 + 50;
+              const y = 600 - ((fire.lat - 32) / 10) * 500;
+              const radius = Math.min(Math.sqrt(fire.acres / 10000) * 2, 20);
+              const isSelected = selectedFire?.id === fire.id;
+              
+              return (
+                <g key={fire.id} onClick={() => setSelectedFire(fire)} className="cursor-pointer">
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={radius}
+                    fill={fire.status === 'Active' ? '#dc2626' : fire.status === 'Controlled' ? '#f59e0b' : '#10b981'}
+                    fillOpacity={isSelected ? 0.8 : 0.5}
+                    stroke={isSelected ? '#1e40af' : '#ffffff'}
+                    strokeWidth={isSelected ? 2 : 1}
+                  />
+                  <text 
+                    x={x} 
+                    y={y - radius - 5} 
+                    fontSize="10" 
+                    fill="#1e40af" 
+                    textAnchor="middle"
+                    className="font-medium"
+                  >
+                    {fire.name}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+          
+          {selectedFire && (
+            <div className="absolute top-4 right-4 w-80 bg-white rounded-lg shadow-lg border border-gray-200 p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-base lg:text-lg font-semibold text-gray-900">{selectedFire.name}</h3>
+                <button
+                  onClick={() => setSelectedFire(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="grid gap-4">
+                <div className="flex justify-between">
+                  <span className="text-base text-gray-500">Status</span>
+                  <span className={`px-2 py-1 text-base font-medium rounded ${
+                    selectedFire.status === 'Active' 
+                      ? 'bg-red-100 text-red-800' 
+                      : selectedFire.status === 'Controlled'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-green-100 text-green-800'
+                  }`}>
+                    {selectedFire.status}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-base text-gray-500">County</span>
+                  <span className="text-base font-medium text-gray-900">{selectedFire.county}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-base text-gray-500">Size</span>
+                  <span className="text-base font-medium text-gray-900">{selectedFire.acres.toLocaleString()} acres</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-base text-gray-500">Containment</span>
+                  <span className="text-base font-medium text-gray-900">{selectedFire.containment}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-base text-gray-500">Personnel</span>
+                  <span className="text-base font-medium text-gray-900">{selectedFire.personnel.toLocaleString()}</span>
+                </div>
+                {selectedFire.evacuation_orders && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded">
+                    <p className="text-base font-medium text-red-800">Evacuation Orders in Effect</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {mutationMode && (
+            <div className="absolute bottom-4 left-4 w-80 bg-black/90 text-green-400 rounded-lg p-4 font-mono text-base">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-purple-400">FORENSIC_CONSOLE</span>
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              </div>
+              <div className="space-y-1">
+                {forensicLogs.map((log, i) => (
+                  <div key={i} className="opacity-80">{log}</div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
