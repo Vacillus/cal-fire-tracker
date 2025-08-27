@@ -1,13 +1,35 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Dashboard from '@/components/Dashboard';
-import MutationMode from '@/components/MutationMode';
-import FireLore from '@/components/FireLore';
+import { useState } from 'react';
 
 export default function Home() {
   const [mutationMode, setMutationMode] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'lore' | 'mutations'>('dashboard');
+
+  const mockIncidents = [
+    {
+      incidentId: '1',
+      incidentName: 'Park Fire',
+      county: 'Butte',
+      acresBurned: 429603,
+      containmentPercent: 100,
+      latitude: 39.8,
+      longitude: -121.6,
+      isActive: false,
+      crewsInvolved: 6393,
+    },
+    {
+      incidentId: '2',
+      incidentName: 'Boyles Fire',
+      county: 'Riverside',
+      acresBurned: 13238,
+      containmentPercent: 95,
+      latitude: 33.7,
+      longitude: -116.2,
+      isActive: true,
+      crewsInvolved: 512,
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
@@ -91,9 +113,110 @@ export default function Home() {
           </div>
         )}
         
-        {activeTab === 'dashboard' && <Dashboard mutationMode={mutationMode} />}
-        {activeTab === 'lore' && <FireLore />}
-        {activeTab === 'mutations' && <MutationMode />}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-8">
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-gray-800/50 backdrop-blur rounded-lg p-6 border border-gray-700">
+                <h3 className="text-sm font-medium text-gray-400">Active Fires</h3>
+                <p className="text-3xl font-bold text-orange-500 mt-2">
+                  {mockIncidents.filter(i => i.isActive).length}
+                </p>
+              </div>
+              <div className="bg-gray-800/50 backdrop-blur rounded-lg p-6 border border-gray-700">
+                <h3 className="text-sm font-medium text-gray-400">Total Acres</h3>
+                <p className="text-3xl font-bold text-red-500 mt-2">
+                  {mockIncidents.reduce((sum, i) => sum + i.acresBurned, 0).toLocaleString()}
+                </p>
+              </div>
+              <div className="bg-gray-800/50 backdrop-blur rounded-lg p-6 border border-gray-700">
+                <h3 className="text-sm font-medium text-gray-400">Personnel</h3>
+                <p className="text-3xl font-bold text-blue-500 mt-2">
+                  {mockIncidents.reduce((sum, i) => sum + i.crewsInvolved, 0).toLocaleString()}
+                </p>
+              </div>
+              <div className="bg-gray-800/50 backdrop-blur rounded-lg p-6 border border-gray-700">
+                <h3 className="text-sm font-medium text-gray-400">Avg Containment</h3>
+                <p className="text-3xl font-bold text-green-500 mt-2">
+                  {Math.round(mockIncidents.reduce((sum, i) => sum + i.containmentPercent, 0) / mockIncidents.length)}%
+                </p>
+              </div>
+            </div>
+
+            {/* Incident List */}
+            <div className="bg-gray-800/50 backdrop-blur rounded-lg p-6 border border-gray-700">
+              <h2 className="text-xl font-bold mb-4 text-orange-400">Active Incidents</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-700 text-left">
+                      <th className="pb-3 text-gray-400">Incident</th>
+                      <th className="pb-3 text-gray-400">County</th>
+                      <th className="pb-3 text-gray-400">Acres</th>
+                      <th className="pb-3 text-gray-400">Contained</th>
+                      <th className="pb-3 text-gray-400">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mockIncidents.map(incident => (
+                      <tr key={incident.incidentId} className="border-b border-gray-700/50">
+                        <td className="py-3">{incident.incidentName}</td>
+                        <td className="py-3">{incident.county}</td>
+                        <td className="py-3">{incident.acresBurned.toLocaleString()}</td>
+                        <td className="py-3">{incident.containmentPercent}%</td>
+                        <td className="py-3">
+                          <span className={incident.isActive ? 'text-red-400' : 'text-green-400'}>
+                            {incident.isActive ? '🔥 Active' : '✓ Contained'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'lore' && (
+          <div className="bg-gray-800/50 backdrop-blur rounded-lg p-6 border border-gray-700">
+            <h2 className="text-xl font-bold mb-4 text-orange-400">Fire Lore</h2>
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-yellow-400">2024 - Park Fire</h3>
+                <p className="text-gray-300">Fourth largest wildfire in California history at 429,603 acres</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-yellow-400">2020 - August Complex</h3>
+                <p className="text-gray-300">First "Gigafire" in modern California history at 1,032,648 acres</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-yellow-400">2018 - Camp Fire</h3>
+                <p className="text-gray-300">Deadliest fire in California history with 85 fatalities</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'mutations' && (
+          <div className="bg-gray-800/50 backdrop-blur rounded-lg p-6 border border-gray-700">
+            <h2 className="text-xl font-bold mb-4 text-purple-400">Mutation Logs</h2>
+            <div className="space-y-2 font-mono text-xs text-purple-300">
+              <div>[FORENSIC] Mutation monitoring active...</div>
+              <div>[FORENSIC] Contradiction detection: ENABLED</div>
+              <div>[FORENSIC] Temporal anomaly scanner: RUNNING</div>
+              <div>[FORENSIC] Quantum state observer: INITIALIZED</div>
+              <div className="text-green-400">[FORENSIC] All systems operational</div>
+              {mutationMode && (
+                <>
+                  <div className="mt-4 text-yellow-400">[MUTATION] Data sync initiated</div>
+                  <div className="text-orange-400">[CONTRADICTION] Acres burned decreased detected</div>
+                  <div className="text-blue-400">[ARTIFACT] Mutation logged to audit trail</div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Footer */}
