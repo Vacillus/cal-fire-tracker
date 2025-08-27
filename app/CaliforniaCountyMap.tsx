@@ -103,6 +103,7 @@ interface FireData {
   acres: number;
   containment: number;
   status: 'Active' | 'Contained' | 'Controlled';
+  timestamp: string;
   personnel: number;
   structures_threatened: number;
   evacuation_orders: boolean;
