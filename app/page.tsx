@@ -188,7 +188,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="font-semibold text-yellow-400">2020 - August Complex</h3>
-                <p className="text-gray-300">First "Gigafire" in modern California history at 1,032,648 acres</p>
+                <p className="text-gray-300">First &quot;Gigafire&quot; in modern California history at 1,032,648 acres</p>
               </div>
               <div>
                 <h3 className="font-semibold text-yellow-400">2018 - Camp Fire</h3>
