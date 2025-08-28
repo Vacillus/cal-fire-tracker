@@ -9,13 +9,20 @@ interface CalFireMapProps {
 interface FireData {
   id: string;
   name: string;
+  county: string;
+  city?: string;
   lat: number;
   lng: number;
   acres: number;
   containment: number;
   status: 'Active' | 'Contained' | 'Controlled';
-  county: string;
-  perimeter: [number, number][];
+  timestamp: string;
+  personnel: number;
+  structures_threatened: number;
+  evacuation_orders: boolean;
+  started_date?: string;
+  cause?: string;
+  perimeter?: [number, number][];
 }
 
 // Embedded California county GeoJSON data (validated coordinates)
@@ -113,6 +120,12 @@ const FIRE_DATA: FireData[] = [
     containment: 100,
     status: 'Controlled',
     county: 'Butte',
+    timestamp: new Date().toLocaleString(),
+    personnel: 6393,
+    structures_threatened: 0,
+    evacuation_orders: false,
+    started_date: '2024-07-24',
+    cause: 'Arson',
     perimeter: [[39.82, -121.64], [39.81, -121.60], [39.78, -121.60], [39.78, -121.64]]
   },
   {
@@ -124,6 +137,12 @@ const FIRE_DATA: FireData[] = [
     containment: 77,
     status: 'Active',
     county: 'San Bernardino',
+    timestamp: new Date().toLocaleString(),
+    personnel: 450,
+    structures_threatened: 150,
+    evacuation_orders: true,
+    started_date: '2024-11-01',
+    cause: 'Under Investigation',
     perimeter: [[34.33, -117.49], [34.32, -117.47], [34.31, -117.47], [34.31, -117.49]]
   },
   {
@@ -135,6 +154,12 @@ const FIRE_DATA: FireData[] = [
     containment: 85,
     status: 'Active',
     county: 'Riverside',
+    timestamp: new Date().toLocaleString(),
+    personnel: 320,
+    structures_threatened: 75,
+    evacuation_orders: false,
+    started_date: '2024-10-28',
+    cause: 'Power Lines',
     perimeter: [[33.56, -116.86], [33.55, -116.84], [33.54, -116.84], [33.54, -116.86]]
   },
   {
@@ -146,6 +171,12 @@ const FIRE_DATA: FireData[] = [
     containment: 45,
     status: 'Active', 
     county: 'Fresno',
+    timestamp: new Date().toLocaleString(),
+    personnel: 800,
+    structures_threatened: 200,
+    evacuation_orders: true,
+    started_date: '2024-10-25',
+    cause: 'Lightning',
     perimeter: [[37.22, -119.32], [37.20, -119.28], [37.18, -119.28], [37.18, -119.32]]
   },
   {
@@ -156,7 +187,13 @@ const FIRE_DATA: FireData[] = [
     acres: 3200,
     containment: 60,
     status: 'Active',
-    county: 'Napa', 
+    county: 'Napa',
+    timestamp: new Date().toLocaleString(),
+    personnel: 250,
+    structures_threatened: 50,
+    evacuation_orders: false,
+    started_date: '2024-10-30',
+    cause: 'Vehicle',
     perimeter: [[38.51, -122.41], [38.50, -122.39], [38.49, -122.39], [38.49, -122.41]]
   },
   {
@@ -168,6 +205,12 @@ const FIRE_DATA: FireData[] = [
     containment: 30,
     status: 'Active',
     county: 'Los Angeles',
+    timestamp: new Date().toLocaleString(),
+    personnel: 600,
+    structures_threatened: 300,
+    evacuation_orders: true,
+    started_date: '2024-10-29',
+    cause: 'Under Investigation',
     perimeter: [[34.32, -118.12], [34.30, -118.08], [34.28, -118.08], [34.28, -118.12]]
   }
 ];
