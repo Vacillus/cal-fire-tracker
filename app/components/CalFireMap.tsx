@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 interface CalFireMapProps {
   onFireSelect?: (fireData: any) => void;
@@ -18,7 +18,7 @@ interface FireData {
   perimeter: [number, number][];
 }
 
-// Embedded California county GeoJSON data (simplified for stability)
+// Embedded California county GeoJSON data (validated coordinates)
 const CALIFORNIA_COUNTIES = {
   "type": "FeatureCollection",
   "features": [
@@ -172,111 +172,244 @@ const FIRE_DATA: FireData[] = [
   }
 ];
 
-// Projection utilities - Web Mercator-like transformation
+// MUTATION-COMPLIANT projection utilities with validation
 const PROJECT_BOUNDS = {
   minLat: 32.0, maxLat: 42.0,
   minLng: -125.0, maxLng: -114.0
 };
 
-const project = (lat: number, lng: number, width: number, height: number) => {
-  const x = ((lng - PROJECT_BOUNDS.minLng) / (PROJECT_BOUNDS.maxLng - PROJECT_BOUNDS.minLng)) * width;
-  const y = height - ((lat - PROJECT_BOUNDS.minLat) / (PROJECT_BOUNDS.maxLat - PROJECT_BOUNDS.minLat)) * height;
-  return { x, y };
+// Forensic coordinate validation
+const validateCoordinate = (lat: number, lng: number): boolean => {
+  return (
+    !isNaN(lat) && !isNaN(lng) &&
+    isFinite(lat) && isFinite(lng) &&
+    lat >= PROJECT_BOUNDS.minLat && lat <= PROJECT_BOUNDS.maxLat &&
+    lng >= PROJECT_BOUNDS.minLng && lng <= PROJECT_BOUNDS.maxLng
+  );
 };
 
-const projectPath = (coordinates: number[][], width: number, height: number): string => {
-  return coordinates.map((coord, i) => {
-    const { x, y } = project(coord[1], coord[0], width, height);
-    return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-  }).join(' ') + ' Z';
+const project = (lat: number, lng: number, width: number, height: number) => {
+  // Validate inputs to prevent NaN propagation
+  if (!validateCoordinate(lat, lng) || width <= 0 || height <= 0) {
+    console.warn(`Invalid coordinates or dimensions: lat=${lat}, lng=${lng}, w=${width}, h=${height}`);
+    return { x: 0, y: 0, valid: false };
+  }
+
+  const x = ((lng - PROJECT_BOUNDS.minLng) / (PROJECT_BOUNDS.maxLng - PROJECT_BOUNDS.minLng)) * width;
+  const y = height - ((lat - PROJECT_BOUNDS.minLat) / (PROJECT_BOUNDS.maxLat - PROJECT_BOUNDS.minLat)) * height;
+  
+  return { x, y, valid: true };
 };
 
 export default function CalFireMap({ onFireSelect }: CalFireMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [selectedCounty, setSelectedCounty] = useState<string | null>(null);
   const [selectedFire, setSelectedFire] = useState<FireData | null>(null);
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [renderError, setRenderError] = useState<string | null>(null);
 
-  useEffect(() => {
+  // MUTATION-COMPLIANT draw function with state isolation
+  const drawMap = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      setRenderError('Canvas reference lost');
+      return;
+    }
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      setRenderError('Canvas context unavailable');
+      return;
+    }
 
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    try {
+      // FORENSIC: Save initial canvas state
+      ctx.save();
+      
+      // MUTATION FIX: Complete state reset
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform matrix
+      
+      // Background fill for visual debugging
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // LAYER 1: County boundaries with isolated state
+      CALIFORNIA_COUNTIES.features.forEach((county, countyIndex) => {
+        ctx.save(); // Isolate county drawing state
+        
+        try {
+          const coords = county.geometry.coordinates[0];
+          if (!coords || coords.length < 3) {
+            console.warn(`Invalid county geometry for ${county.properties.NAME}`);
+            return;
+          }
+
+          // Validate all coordinates before drawing
+          const validCoords = coords.filter(([lng, lat]) => validateCoordinate(lat, lng));
+          if (validCoords.length < 3) {
+            console.warn(`Insufficient valid coordinates for ${county.properties.NAME}`);
+            return;
+          }
+
+          // MUTATION FIX: Fresh path for each county
+          ctx.beginPath();
+          
+          let pathStarted = false;
+          validCoords.forEach(([lng, lat], i) => {
+            const projected = project(lat, lng, canvas.width, canvas.height);
+            if (!projected.valid) return;
+            
+            if (!pathStarted) {
+              ctx.moveTo(projected.x, projected.y);
+              pathStarted = true;
+            } else {
+              ctx.lineTo(projected.x, projected.y);
+            }
+          });
+          
+          if (!pathStarted) {
+            console.warn(`No valid coordinates for ${county.properties.NAME}`);
+            return;
+          }
+          
+          ctx.closePath();
+          
+          // MUTATION FIX: Explicit state setting
+          ctx.fillStyle = selectedCounty === county.properties.NAME ? '#bfdbfe' : '#f3f4f6';
+          ctx.strokeStyle = '#6b7280';
+          ctx.lineWidth = 1;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          
+          // Draw with error handling
+          ctx.fill();
+          ctx.stroke();
+
+          // County label with centroid calculation
+          const centroid = validCoords.reduce((acc, [lng, lat]) => {
+            const projected = project(lat, lng, canvas.width, canvas.height);
+            if (projected.valid) {
+              return { x: acc.x + projected.x, y: acc.y + projected.y, count: acc.count + 1 };
+            }
+            return acc;
+          }, { x: 0, y: 0, count: 0 });
+          
+          if (centroid.count > 0) {
+            centroid.x /= centroid.count;
+            centroid.y /= centroid.count;
+            
+            // Text rendering with state isolation
+            ctx.fillStyle = '#374151';
+            ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(county.properties.NAME, centroid.x, centroid.y);
+          }
+        } catch (countyError) {
+          console.error(`County ${county.properties.NAME} render error:`, countyError);
+        } finally {
+          ctx.restore(); // Always restore county state
+        }
+      });
+
+      // LAYER 2: Fire perimeters and markers with isolated state
+      FIRE_DATA.forEach((fire, fireIndex) => {
+        ctx.save(); // Isolate fire drawing state
+        
+        try {
+          const centerProjected = project(fire.lat, fire.lng, canvas.width, canvas.height);
+          if (!centerProjected.valid) {
+            console.warn(`Invalid fire coordinates: ${fire.name}`);
+            return;
+          }
+
+          const color = fire.status === 'Active' ? '#ef4444' : '#eab308';
+          
+          // Fire perimeter with validation
+          if (fire.perimeter && fire.perimeter.length >= 3) {
+            const validPerimeter = fire.perimeter.filter(([lat, lng]) => validateCoordinate(lat, lng));
+            
+            if (validPerimeter.length >= 3) {
+              ctx.beginPath();
+              
+              let perimeterStarted = false;
+              validPerimeter.forEach(([lat, lng]) => {
+                const projected = project(lat, lng, canvas.width, canvas.height);
+                if (!projected.valid) return;
+                
+                if (!perimeterStarted) {
+                  ctx.moveTo(projected.x, projected.y);
+                  perimeterStarted = true;
+                } else {
+                  ctx.lineTo(projected.x, projected.y);
+                }
+              });
+              
+              if (perimeterStarted) {
+                ctx.closePath();
+                ctx.fillStyle = color + '40'; // 25% opacity
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.fill();
+                ctx.stroke();
+              }
+            }
+          }
+
+          // Fire center marker
+          ctx.beginPath();
+          ctx.arc(centerProjected.x, centerProjected.y, 5, 0, 2 * Math.PI);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.strokeStyle = 'white';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Fire label
+          ctx.fillStyle = color;
+          ctx.font = 'bold 10px -apple-system, BlinkMacSystemFont, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(fire.name, centerProjected.x, centerProjected.y - 8);
+          
+        } catch (fireError) {
+          console.error(`Fire ${fire.name} render error:`, fireError);
+        } finally {
+          ctx.restore(); // Always restore fire state
+        }
+      });
+
+      // Clear any render errors on successful draw
+      setRenderError(null);
+      
+    } catch (globalError) {
+      console.error('Global canvas render error:', globalError);
+      setRenderError('Canvas rendering failed: ' + globalError.message);
+    } finally {
+      // FORENSIC: Always restore initial state
+      ctx.restore();
+    }
+  }, [selectedCounty, selectedFire]);
+
+  // MUTATION-COMPLIANT useEffect with proper cleanup
+  useEffect(() => {
+    let animationFrame: number;
     
-    // Draw county boundaries
-    CALIFORNIA_COUNTIES.features.forEach(county => {
-      ctx.beginPath();
-      const coords = county.geometry.coordinates[0];
-      coords.forEach(([lng, lat], i) => {
-        const { x, y } = project(lat, lng, canvas.width, canvas.height);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.closePath();
-      
-      // Fill and stroke
-      ctx.fillStyle = selectedCounty === county.properties.NAME ? '#bfdbfe' : '#f3f4f6';
-      ctx.strokeStyle = '#6b7280';
-      ctx.lineWidth = 2;
-      ctx.fill();
-      ctx.stroke();
+    const scheduleRender = () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+      animationFrame = requestAnimationFrame(drawMap);
+    };
 
-      // County label
-      const centroid = coords.reduce((acc, [lng, lat]) => {
-        const { x, y } = project(lat, lng, canvas.width, canvas.height);
-        return { x: acc.x + x, y: acc.y + y };
-      }, { x: 0, y: 0 });
-      
-      centroid.x /= coords.length;
-      centroid.y /= coords.length;
-      
-      ctx.fillStyle = '#374151';
-      ctx.font = '12px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(county.properties.NAME, centroid.x, centroid.y);
-    });
+    scheduleRender();
 
-    // Draw fire perimeters and markers
-    FIRE_DATA.forEach(fire => {
-      const { x, y } = project(fire.lat, fire.lng, canvas.width, canvas.height);
-      
-      // Fire perimeter
-      ctx.beginPath();
-      fire.perimeter.forEach(([lat, lng], i) => {
-        const { x: px, y: py } = project(lat, lng, canvas.width, canvas.height);
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      });
-      ctx.closePath();
-      
-      const color = fire.status === 'Active' ? '#ef4444' : '#eab308';
-      ctx.fillStyle = color + '40'; // 25% opacity
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
-      ctx.fill();
-      ctx.stroke();
-
-      // Fire center marker
-      ctx.beginPath();
-      ctx.arc(x, y, 6, 0, 2 * Math.PI);
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Fire label
-      ctx.fillStyle = color;
-      ctx.font = 'bold 11px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(fire.name, x, y - 12);
-    });
-
-  }, [selectedCounty, selectedFire, dimensions]);
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [drawMap]);
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -288,13 +421,16 @@ export default function CalFireMap({ onFireSelect }: CalFireMapProps) {
 
     // Check fire clicks first (smaller targets)
     const clickedFire = FIRE_DATA.find(fire => {
-      const { x, y } = project(fire.lat, fire.lng, canvas.width, canvas.height);
-      const distance = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
+      const projected = project(fire.lat, fire.lng, canvas.width, canvas.height);
+      if (!projected.valid) return false;
+      
+      const distance = Math.sqrt((clickX - projected.x) ** 2 + (clickY - projected.y) ** 2);
       return distance <= 10;
     });
 
     if (clickedFire) {
       setSelectedFire(clickedFire);
+      setSelectedCounty(null);
       if (onFireSelect) {
         onFireSelect({
           county: clickedFire.county,
@@ -310,17 +446,23 @@ export default function CalFireMap({ onFireSelect }: CalFireMapProps) {
       return;
     }
 
-    // Check county clicks
+    // Check county clicks with point-in-polygon
     const clickedCounty = CALIFORNIA_COUNTIES.features.find(county => {
       const coords = county.geometry.coordinates[0];
-      // Simple point-in-polygon check
+      const validCoords = coords.filter(([lng, lat]) => validateCoordinate(lat, lng));
+      
+      if (validCoords.length < 3) return false;
+      
+      // Point-in-polygon algorithm
       let inside = false;
-      for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
-        const { x: xi, y: yi } = project(coords[i][1], coords[i][0], canvas.width, canvas.height);
-        const { x: xj, y: yj } = project(coords[j][1], coords[j][0], canvas.width, canvas.height);
+      for (let i = 0, j = validCoords.length - 1; i < validCoords.length; j = i++) {
+        const projI = project(validCoords[i][1], validCoords[i][0], canvas.width, canvas.height);
+        const projJ = project(validCoords[j][1], validCoords[j][0], canvas.width, canvas.height);
         
-        if (((yi > clickY) !== (yj > clickY)) && 
-            (clickX < (xj - xi) * (clickY - yi) / (yj - yi) + xi)) {
+        if (!projI.valid || !projJ.valid) continue;
+        
+        if (((projI.y > clickY) !== (projJ.y > clickY)) && 
+            (clickX < (projJ.x - projI.x) * (clickY - projI.y) / (projJ.y - projI.y) + projI.x)) {
           inside = !inside;
         }
       }
@@ -352,8 +494,16 @@ export default function CalFireMap({ onFireSelect }: CalFireMapProps) {
       {/* Map Title */}
       <div className="absolute top-4 left-4 bg-white p-3 rounded-lg shadow-lg z-10">
         <h3 className="text-lg font-semibold text-gray-800">California Fire Map</h3>
-        <p className="text-sm text-gray-600">Geospatially accurate • Zero external deps</p>
+        <p className="text-sm text-gray-600">Mutation-compliant Canvas rendering</p>
       </div>
+
+      {/* Render Error Display */}
+      {renderError && (
+        <div className="absolute top-20 left-4 bg-red-50 border border-red-200 p-3 rounded-lg z-10 max-w-sm">
+          <div className="text-red-700 text-sm font-medium">Render Error</div>
+          <div className="text-red-600 text-xs mt-1">{renderError}</div>
+        </div>
+      )}
 
       {/* Legend */}
       <div className="absolute top-4 right-4 bg-white p-3 rounded-lg shadow-lg z-10">
@@ -390,7 +540,7 @@ export default function CalFireMap({ onFireSelect }: CalFireMapProps) {
               <h4 className="font-semibold text-gray-800">{selectedCounty} County</h4>
               <div className="mt-2 text-sm text-gray-600">
                 <p>Active Fires: {FIRE_DATA.filter(f => f.county === selectedCounty).length}</p>
-                <p className="text-blue-600 mt-2">🎯 Canvas-rendered geospatial accuracy</p>
+                <p className="text-green-600 mt-2">✅ Mutation-compliant rendering</p>
               </div>
             </div>
           )}
@@ -411,7 +561,7 @@ export default function CalFireMap({ onFireSelect }: CalFireMapProps) {
 
       {/* Status */}
       <div className="absolute bottom-4 right-4 text-xs text-gray-500 bg-white p-2 rounded">
-        HTML5 Canvas • Fault-tolerant rendering
+        Forensic Canvas • State-isolated rendering
       </div>
     </div>
   );
