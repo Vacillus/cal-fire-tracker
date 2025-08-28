@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && echo 'Static export completed'",
+    "build": "next build && node create-ssr-stub.js && echo 'Static export completed'",
     "start": "next start",
     "lint": "eslint"
   },

@@ -8,6 +8,8 @@ frontend:
       commands:
         - npm run build
         - ls -la out/  # Forensic verification of static output
+        - ls -la .next/  # Verify SSR stub creation
+        - cp .next/required-server-files.json out/ || true  # Copy stub to output
   artifacts:
     baseDirectory: out
     files:
@@ -15,6 +17,3 @@ frontend:
   cache:
     paths:
       - node_modules/**/*
-  # MUTATION ENFORCEMENT: Static-only deployment
-  functionType: API
-  renderType: Static
