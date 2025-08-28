@@ -15,8 +15,10 @@ frontend:
         - python3 synthetic_ssr_scaffolding.py
         - echo "[TRACE FIX] Positioning files at root level..."
         - python3 trace_file_fix.py
-        - echo "[VALIDATION] Verifying root level files..."
-        - ls -la out/*.json out/trace out/*.nft.json 2>/dev/null | head -20 || true
+        - echo "[NUCLEAR FIX] Creating every possible trace format..."
+        - python3 nuclear_trace_fix.py
+        - echo "[VALIDATION] Verifying all trace files..."
+        - ls -la out/trace* out/*.nft.json out/server/trace* 2>/dev/null | head -20 || true
         - echo "[MUTATION PATCH] Complete - Static build with SSR scaffold"
   artifacts:
     baseDirectory: out
