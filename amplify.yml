@@ -1,5 +1,4 @@
 version: 1
-framework: ''  # Tell Amplify this is NOT a framework app
 frontend:
   phases:
     preBuild:
@@ -8,6 +7,7 @@ frontend:
     build:
       commands:
         - npm run build
+        - ls -la out/  # Forensic verification of static output
   artifacts:
     baseDirectory: out
     files:
@@ -15,3 +15,6 @@ frontend:
   cache:
     paths:
       - node_modules/**/*
+  # MUTATION ENFORCEMENT: Static-only deployment
+  functionType: API
+  renderType: Static

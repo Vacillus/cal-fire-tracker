@@ -1,0 +1,35 @@
+{
+  "mutation_id": "ssr-persistence-001",
+  "timestamp": "2025-01-28T21:07:30Z",
+  "mutation_intent": "Force static-only deployment via YAML configuration",
+  "expected_behavior": "AWS Amplify respects renderType: 'Static' and deploys as static site",
+  "observed_behavior": "AWS Amplify continues searching for required-server-files.json (SSR artifact)",
+  "contradiction_hypothesis": "CloudFormation stack drift and cached Amplify artifacts override YAML mutations",
+  "forensic_evidence": {
+    "yaml_mutation_applied": {
+      "framework": "",
+      "output": "export",
+      "baseDirectory": "out",
+      "distDir": ".next"
+    },
+    "amplify_response": "CustomerError: Can't find required-server-files.json",
+    "build_success": true,
+    "deployment_failure": true,
+    "failure_pattern": "Consistent across 10+ deployment attempts"
+  },
+  "root_cause_analysis": {
+    "primary": "AWS Amplify auto-detection overrides explicit configuration",
+    "secondary": "CloudFormation stack contains SSR Lambda functions from initial detection",
+    "tertiary": "Amplify cache layer preserves SSR routing despite static mutations"
+  },
+  "remediation_required": [
+    "1. Manual CloudFormation stack inspection and SSR Lambda removal",
+    "2. Amplify cache purge via amplify delete --force",
+    "3. Fresh initialization with amplify init",
+    "4. Explicit platform override in AWS Console",
+    "5. Disable auto-framework detection permanently"
+  ],
+  "mutation_classification": "BACKEND_DRIFT",
+  "severity": "HIGH",
+  "recurrence_probability": "95% without manual intervention"
+}
