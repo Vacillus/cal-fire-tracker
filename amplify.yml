@@ -13,9 +13,10 @@ frontend:
         - python3 artifact_validity_wrapper.py
         - echo "[SYNTHETIC SCAFFOLD] Generating comprehensive SSR mimicry..."
         - python3 synthetic_ssr_scaffolding.py
-        - echo "[VALIDATION] Verifying scaffold files..."
-        - ls -la out/*.json | head -10
-        - ls -la out/.next/*.json 2>/dev/null | head -10 || true
+        - echo "[TRACE FIX] Positioning files at root level..."
+        - python3 trace_file_fix.py
+        - echo "[VALIDATION] Verifying root level files..."
+        - ls -la out/*.json out/trace out/*.nft.json 2>/dev/null | head -20 || true
         - echo "[MUTATION PATCH] Complete - Static build with SSR scaffold"
   artifacts:
     baseDirectory: out
