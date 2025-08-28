@@ -7,9 +7,12 @@ frontend:
     build:
       commands:
         - npm run build
-        - ls -la out/  # Forensic verification of static output
-        - ls -la .next/  # Verify SSR stub creation
-        - cp .next/required-server-files.json out/ || true  # Copy stub to output
+        - echo "Contents of out directory after build:"
+        - ls -la out/
+        - echo "Creating server trace files..."
+        - node create-ssr-stub.js
+        - echo "Final out directory contents:"
+        - ls -la out/
   artifacts:
     baseDirectory: out
     files:
