@@ -23,7 +23,7 @@ frontend:
         - ls -la out/trace* out/*.nft.json out/server/trace* 2>/dev/null | head -20 || true
         - echo "[MUTATION PATCH] Complete - Static build with SSR scaffold"
   artifacts:
-    baseDirectory: out
+    baseDirectory: .next/server
     files:
       - '**/*'
   cache:
