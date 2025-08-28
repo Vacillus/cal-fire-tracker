@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 
 interface CalFireMapProps {
-  onFireSelect?: (fireData: any) => void;
+  onFireSelect?: (fireData: FireData) => void;
 }
 
 interface FireData {
@@ -234,7 +234,7 @@ export default function CalFireMap({ onFireSelect }: CalFireMapProps) {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       // LAYER 1: County boundaries with isolated state
-      CALIFORNIA_COUNTIES.features.forEach((county, countyIndex) => {
+      CALIFORNIA_COUNTIES.features.forEach((county) => {
         ctx.save(); // Isolate county drawing state
         
         try {
@@ -255,7 +255,7 @@ export default function CalFireMap({ onFireSelect }: CalFireMapProps) {
           ctx.beginPath();
           
           let pathStarted = false;
-          validCoords.forEach(([lng, lat], i) => {
+          validCoords.forEach(([lng, lat]) => {
             const projected = project(lat, lng, canvas.width, canvas.height);
             if (!projected.valid) return;
             
@@ -313,7 +313,7 @@ export default function CalFireMap({ onFireSelect }: CalFireMapProps) {
       });
 
       // LAYER 2: Fire perimeters and markers with isolated state
-      FIRE_DATA.forEach((fire, fireIndex) => {
+      FIRE_DATA.forEach((fire) => {
         ctx.save(); // Isolate fire drawing state
         
         try {
@@ -389,7 +389,7 @@ export default function CalFireMap({ onFireSelect }: CalFireMapProps) {
       // FORENSIC: Always restore initial state
       ctx.restore();
     }
-  }, [selectedCounty, selectedFire]);
+  }, [selectedCounty]);
 
   // MUTATION-COMPLIANT useEffect with proper cleanup
   useEffect(() => {

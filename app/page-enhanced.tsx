@@ -25,7 +25,6 @@ export default function CAFireWatchDashboard() {
   const [selectedFire, setSelectedFire] = useState<FireData | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [mutationMode, setMutationMode] = useState(false);
-  const [forensicLogs, setForensicLogs] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {

@@ -1,7 +1,5 @@
 'use client';
 
-import { Fragment } from 'react';
-
 interface FireData {
   id: string;
   name: string;

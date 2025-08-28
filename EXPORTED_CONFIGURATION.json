@@ -1,0 +1,85 @@
+{
+  "export_timestamp": "2025-01-28T21:30:00Z",
+  "original_project_config": {
+    "amplify_yml": {
+      "version": 1,
+      "frontend": {
+        "phases": {
+          "preBuild": {
+            "commands": ["npm install"]
+          },
+          "build": {
+            "commands": ["npm run build"]
+          }
+        },
+        "artifacts": {
+          "baseDirectory": "out",
+          "files": ["**/*"]
+        },
+        "cache": {
+          "paths": ["node_modules/**/*"]
+        }
+      }
+    },
+    "next_config": {
+      "output": "export",
+      "images": {
+        "unoptimized": true
+      }
+    },
+    "package_json": {
+      "name": "cal-fire-tracker",
+      "version": "0.1.0",
+      "private": true,
+      "scripts": {
+        "dev": "next dev",
+        "build": "next build", 
+        "start": "next start",
+        "lint": "eslint"
+      },
+      "dependencies": {
+        "next": "15.5.2",
+        "react": "19.1.0",
+        "react-dom": "19.1.0"
+      }
+    },
+    "tailwind_config": {
+      "content": [
+        "./app/**/*.{js,ts,jsx,tsx,mdx}",
+        "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+        "./components/**/*.{js,ts,jsx,tsx,mdx}",
+        "./src/**/*.{js,ts,jsx,tsx,mdx}"
+      ],
+      "theme": {
+        "extend": {
+          "colors": {
+            "fire": {
+              "red": "#DC2626",
+              "orange": "#EA580C", 
+              "yellow": "#F59E0B"
+            }
+          },
+          "animation": {
+            "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+            "ping-slow": "ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
+          }
+        }
+      },
+      "plugins": ["@tailwindcss/forms", "@tailwindcss/typography"]
+    },
+    "environment_variables": {
+      "AWS_BRANCH": "main",
+      "NODE_VERSION": "20.19.4",
+      "BUILD_TIMEOUT": "300"
+    }
+  },
+  "migration_instructions": {
+    "fresh_project_setup": [
+      "1. Ensure amplify.yml matches exported configuration",
+      "2. Apply Next.js config with static export",
+      "3. Configure Tailwind with custom fire theme",
+      "4. Set environment variables",
+      "5. Deploy latest commit to fresh project"
+    ]
+  }
+}
