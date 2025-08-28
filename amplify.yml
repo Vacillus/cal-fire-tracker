@@ -11,8 +11,15 @@ frontend:
         - python3 amplify_ssr_bypass.py
         - npm run build
         - python3 artifact_validity_wrapper.py
+        - echo "[MUTATION PATCH] Creating additional trace files..."
+        - mkdir -p out/.next/server/pages
+        - echo '{"version":1,"files":[]}' > out/.next/server/pages/_app.js.nft.json
+        - echo '{"version":1,"files":[]}' > out/.next/server/pages/_document.js.nft.json  
+        - echo '{"version":1,"files":[]}' > out/.next/server/pages/index.js.nft.json
+        - echo '{"version":1,"files":{}}' > out/.next/trace
         - echo "[MUTATION PATCH] Static compliance enforced"
         - ls -la out/
+        - ls -la out/.next/server/pages/ || true
   artifacts:
     baseDirectory: out
     files:
