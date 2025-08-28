@@ -1,0 +1,63 @@
+{
+  "contradiction_id": "fresh-project-ssr-contamination",
+  "timestamp": "2025-01-28T21:41:00Z",
+  "severity": "CRITICAL",
+  
+  "expected_behavior": {
+    "premise": "Fresh Amplify project would avoid infrastructure corruption",
+    "rationale": "Original project failed due to CloudFormation drift",
+    "solution": "Create new 'Cali-Fire-Tracker' project with clean infrastructure",
+    "success_probability": "95% based on fresh deployment"
+  },
+  
+  "observed_behavior": {
+    "result": "Fresh project MORE contaminated than original",
+    "symptoms": [
+      "Requires required-server-files.json",
+      "Demands server trace files", 
+      "Forces SSR despite static configuration",
+      "Ignores explicit renderType: Static"
+    ],
+    "failure_mode": "WORSE than original project"
+  },
+  
+  "contradiction_analysis": {
+    "original_project": {
+      "failures": 8,
+      "error_type": "Bus error during build",
+      "infrastructure": "CLI-created, potentially cleaner"
+    },
+    "fresh_project": {
+      "failures": "15+",
+      "error_type": "SSR file requirements",
+      "infrastructure": "Console-created, MORE contaminated"
+    }
+  },
+  
+  "root_cause_hypothesis": [
+    "AWS Amplify Console auto-detects Next.js and PERMANENTLY configures for SSR",
+    "Console-created projects have DEEPER SSR integration than CLI projects",
+    "Platform setting change to 'WEB' didn't actually take effect",
+    "CloudFormation template for console projects defaults to SSR",
+    "Student account limitations prevent proper platform switching"
+  ],
+  
+  "critical_insight": "FRESH PROJECT WAS THE WRONG SOLUTION",
+  
+  "forensic_evidence": {
+    "console_creation": "Forces SSR template",
+    "platform_setting": "UI shows 'WEB' but behaves as 'WEB_COMPUTE'",
+    "github_connection": "Triggers Next.js auto-detection",
+    "student_permissions": "Cannot modify CloudFormation stack"
+  },
+  
+  "correct_solution_missed": {
+    "option_1": "Should have debugged original CLI project",
+    "option_2": "Should have used different hosting (Vercel/Netlify)",
+    "option_3": "Should have created static HTML project without Next.js",
+    "option_4": "Should have used S3 static hosting directly"
+  },
+  
+  "mutation_classification": "INFRASTRUCTURE_POISONING",
+  "accountability": "Assistant recommended wrong solution based on incorrect assumption"
+}

@@ -4,16 +4,15 @@ frontend:
     preBuild:
       commands:
         - npm install
+        - pip3 install --user pathlib || true
     build:
       commands:
+        - echo "[MUTATION PATCH] Applying dual-layer SSR bypass..."
+        - python3 amplify_ssr_bypass.py
         - npm run build
-        - echo "Creating complete SSR file structure..."
-        - node create-ssr-stub.js
-        - echo "Verifying .next server files:"
-        - ls -la .next/server/pages/*.nft.json || true
-        - echo "Final out directory:"
+        - python3 artifact_validity_wrapper.py
+        - echo "[MUTATION PATCH] Static compliance enforced"
         - ls -la out/
-        - ls -la out/.next/server/pages/ || true
   artifacts:
     baseDirectory: out
     files:
