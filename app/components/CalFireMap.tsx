@@ -432,16 +432,7 @@ export default function CalFireMap({ onFireSelect }: CalFireMapProps) {
       setSelectedFire(clickedFire);
       setSelectedCounty(null);
       if (onFireSelect) {
-        onFireSelect({
-          county: clickedFire.county,
-          fires: [{
-            name: clickedFire.name,
-            acres: clickedFire.acres,
-            startDate: '2024-11-01',
-            containment: clickedFire.containment,
-            cause: 'Under Investigation'
-          }]
-        });
+        onFireSelect(clickedFire);
       }
       return;
     }
@@ -475,16 +466,10 @@ export default function CalFireMap({ onFireSelect }: CalFireMapProps) {
       
       if (onFireSelect) {
         const countyFires = FIRE_DATA.filter(fire => fire.county === clickedCounty.properties.NAME);
-        onFireSelect({
-          county: clickedCounty.properties.NAME,
-          fires: countyFires.map(fire => ({
-            name: fire.name,
-            acres: fire.acres,
-            startDate: '2024-11-01',
-            containment: fire.containment,
-            cause: 'Under Investigation'
-          }))
-        });
+        // Select the first fire in the county if any exist
+        if (countyFires.length > 0) {
+          onFireSelect(countyFires[0]);
+        }
       }
     }
   };
