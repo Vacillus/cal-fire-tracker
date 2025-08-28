@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import CaliforniaCountyMap from './CaliforniaCountyMap';
+import CalFireMap from './components/CalFireMap';
 import FireDetailModal from './components/FireDetailModal';
 
 interface FireData {
@@ -238,17 +238,25 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex flex-col md:flex-row">
         {/* Map Section */}
-        <div className="flex-1 relative">
-          <CaliforniaCountyMap 
-            fireData={fireData}
-            onFireSelect={handleFireSelect}
+        <div className="flex-1 relative min-h-[50vh] md:min-h-0">
+          <CalFireMap 
+            onFireSelect={(data) => {
+              // Handle county fire selection - show first fire if multiple exist
+              if (data.fires.length > 0) {
+                const fire = fireData.find(f => 
+                  f.county.toLowerCase() === data.county.toLowerCase() && 
+                  f.status === 'Active'
+                );
+                if (fire) handleFireSelect(fire);
+              }
+            }}
           />
         </div>
 
         {/* Fire List Sidebar */}
-        <div className="w-96 bg-white shadow-lg overflow-y-auto">
+        <div className="w-full md:w-96 bg-white shadow-lg overflow-y-auto max-h-[50vh] md:max-h-none">
           <div className="p-4 bg-gray-50 border-b">
             <h2 className="text-lg font-semibold text-gray-800">Active Incidents</h2>
             <p className="text-sm text-gray-600 mt-1">Click on a fire for details</p>
