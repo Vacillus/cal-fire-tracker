@@ -7,12 +7,13 @@ frontend:
     build:
       commands:
         - npm run build
-        - echo "Contents of out directory after build:"
-        - ls -la out/
-        - echo "Creating server trace files..."
+        - echo "Creating complete SSR file structure..."
         - node create-ssr-stub.js
-        - echo "Final out directory contents:"
+        - echo "Verifying .next server files:"
+        - ls -la .next/server/pages/*.nft.json || true
+        - echo "Final out directory:"
         - ls -la out/
+        - ls -la out/.next/server/pages/ || true
   artifacts:
     baseDirectory: out
     files:
