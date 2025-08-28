@@ -5,7 +5,11 @@ const nextConfig = {
     unoptimized: true
   },
   distDir: '.next',
-  trailingSlash: true
+  trailingSlash: true,
+  experimental: {
+    outputFileTracing: true,
+    outputFileTracingRoot: process.cwd()
+  }
 };
 
 export default nextConfig;
