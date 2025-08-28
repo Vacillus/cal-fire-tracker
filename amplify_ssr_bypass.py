@@ -98,8 +98,22 @@ class AmplifySSRBypass:
                 # Rename to hide from Amplify
                 shutil.move(config_file, f".{config_file}.bypass")
                 
-                # Create sanitized stub
-                stub_content = """// Static-only configuration
+                # Create sanitized stub with correct syntax based on file extension
+                if config_file.endswith('.mjs'):
+                    stub_content = """// Static-only configuration (ES module)
+const nextConfig = {
+  output: 'export',
+  images: { unoptimized: true },
+  distDir: '.next',
+  generateBuildId: () => 'static-build',
+  poweredByHeader: false,
+  compress: false,
+  generateEtags: false
+};
+
+export default nextConfig;"""
+                else:
+                    stub_content = """// Static-only configuration (CommonJS)
 module.exports = {
   output: 'export',
   images: { unoptimized: true },

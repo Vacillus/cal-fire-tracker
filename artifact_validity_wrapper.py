@@ -11,7 +11,7 @@ Part of: Cali-Fire-Tracker Reproducibility Initiative
 import json
 import os
 import re
-import ast
+import shutil
 from pathlib import Path
 from datetime import datetime
 import hashlib
