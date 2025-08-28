@@ -243,14 +243,8 @@ export default function Home() {
         <div className="flex-1 relative min-h-[50vh] md:min-h-0">
           <CalFireMap 
             onFireSelect={(data) => {
-              // Handle county fire selection - show first fire if multiple exist
-              if (data.fires.length > 0) {
-                const fire = fireData.find(f => 
-                  f.county.toLowerCase() === data.county.toLowerCase() && 
-                  f.status === 'Active'
-                );
-                if (fire) handleFireSelect(fire);
-              }
+              // Handle fire selection directly
+              handleFireSelect(data);
             }}
           />
         </div>
