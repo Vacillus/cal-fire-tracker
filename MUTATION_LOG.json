@@ -1,0 +1,94 @@
+{
+  "mutation_log": [
+    {
+      "id": "MUT-001",
+      "timestamp": "2025-01-28T18:15:00Z",
+      "mutation_intent": "Replace box-based fire grid with ArcGIS JavaScript API for geospatial accuracy",
+      "commit": "d525fa1",
+      "observed_behavior": "Build process terminates with bus error during npm build phase",
+      "expected_behavior": "Successful build with interactive ArcGIS map rendering California counties and fire overlays",
+      "contradiction_hypothesis": "Complex dependency tree of @arcgis/core conflicts with Next.js static export, causing memory overflow in build environment",
+      "artifacts": ["package.json with @arcgis/core", "webpack config modifications", "OverlayView implementation"],
+      "failure_mode": "system_level_crash"
+    },
+    {
+      "id": "MUT-002", 
+      "timestamp": "2025-01-28T18:32:00Z",
+      "mutation_intent": "Switch from npm package to CDN-based ArcGIS loading with dynamic imports",
+      "commit": "103525f",
+      "observed_behavior": "AWS Amplify build failure, local build hangs with bus error",
+      "expected_behavior": "Dynamic script loading resolves SSR conflicts, enables static site generation",
+      "contradiction_hypothesis": "Dynamic import patterns still trigger build-time evaluation, SSR/client hydration mismatch causes compilation failure",
+      "artifacts": ["Dynamic script injection", "Window object global state", "Promise-based module loading"],
+      "failure_mode": "build_environment_timeout"
+    },
+    {
+      "id": "MUT-003",
+      "timestamp": "2025-01-28T18:45:00Z", 
+      "mutation_intent": "Replace ArcGIS with Leaflet + react-leaflet for better Next.js compatibility",
+      "commit": "103525f",
+      "observed_behavior": "npm install timeouts, dependency resolution conflicts, build system corruption",
+      "expected_behavior": "Leaflet's lighter dependency footprint resolves build stability issues",
+      "contradiction_hypothesis": "System-level instability affecting all external mapping libraries, not library-specific issue",
+      "artifacts": ["leaflet package", "react-leaflet wrapper", "OpenStreetMap tile layer"],
+      "failure_mode": "dependency_corruption"
+    },
+    {
+      "id": "MUT-004",
+      "timestamp": "2025-01-28T19:02:00Z",
+      "mutation_intent": "Fallback to simple county grid layout without geospatial accuracy",
+      "commit": "539dcf8", 
+      "observed_behavior": "Build succeeds, deployment successful, but lacks geographic fidelity",
+      "expected_behavior": "Working fire tracking interface as baseline",
+      "contradiction_hypothesis": "Success confirms external dependencies are root cause, but solution insufficient per requirements",
+      "artifacts": ["Static county cards", "Fire count indicators", "Click interactions"],
+      "failure_mode": "functional_but_insufficient"
+    },
+    {
+      "id": "MUT-005",
+      "timestamp": "2025-01-28T19:20:00Z",
+      "mutation_intent": "Implement Google Maps JS API with proper geospatial anchoring and local GeoJSON",
+      "commit": "a799bec",
+      "observed_behavior": "Bus error during build, complete system instability", 
+      "expected_behavior": "Google Maps provides robust geospatial platform with county boundaries and fire overlays",
+      "contradiction_hypothesis": "Google Maps TypeScript definitions and complex API surface trigger same system-level failures as other mapping libraries",
+      "artifacts": ["Google Maps API integration", "@types/google.maps", "OverlayView classes", "Local GeoJSON"],
+      "failure_mode": "system_corruption"
+    },
+    {
+      "id": "MUT-006",
+      "timestamp": "2025-01-28T19:45:00Z",
+      "mutation_intent": "Zero-dependency HTML5 Canvas with embedded coordinate math",
+      "commit": "70727d5",
+      "observed_behavior": "Build succeeds locally but AWS Amplify deployment fails",
+      "expected_behavior": "Pure Canvas implementation bypasses all external dependencies",
+      "contradiction_hypothesis": "Canvas implementation introduces visual rendering artifacts - fire markers render but county boundaries appear as cluttered boxes",
+      "artifacts": ["HTML5 Canvas", "Embedded GeoJSON", "Coordinate projection functions", "Point-in-polygon algorithms"],
+      "failure_mode": "visual_mutation_artifacts"
+    },
+    {
+      "id": "MUT-007",
+      "timestamp": "2025-01-28T20:15:00Z",
+      "mutation_intent": "Fix Canvas visual artifacts with state isolation and coordinate validation",
+      "commit": "f333d72",
+      "observed_behavior": "AWS Amplify build failure despite Canvas fixes",
+      "expected_behavior": "Canvas state isolation resolves rendering contradictions, enables clean deployment",
+      "contradiction_hypothesis": "AWS Amplify environment has fundamental incompatibility - not code-level issue",
+      "artifacts": ["Canvas state save/restore", "Coordinate validation", "Error boundary rendering", "React lifecycle control"],
+      "failure_mode": "infrastructure_rejection"
+    }
+  ],
+  "mutation_patterns": {
+    "external_dependency_failures": ["MUT-001", "MUT-002", "MUT-003", "MUT-005"],
+    "system_level_crashes": ["MUT-001", "MUT-005", "MUT-007"],
+    "build_environment_issues": ["MUT-002", "MUT-003", "MUT-006", "MUT-007"], 
+    "visual_artifacts": ["MUT-006"],
+    "successful_deploys": ["MUT-004"]
+  },
+  "contradiction_loop_detected": true,
+  "loop_characteristics": {
+    "trigger": "Any geospatial mapping implementation",
+    "invariant": "AWS Amplify build rejection regardless of approach",
+    "escape_condition": "Unknown - requires infrastructure forensics"
+  }
+}
