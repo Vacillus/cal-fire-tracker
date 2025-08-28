@@ -384,7 +384,7 @@ export default function CalFireMap({ onFireSelect }: CalFireMapProps) {
       
     } catch (globalError) {
       console.error('Global canvas render error:', globalError);
-      setRenderError('Canvas rendering failed: ' + globalError.message);
+      setRenderError('Canvas rendering failed: ' + (globalError instanceof Error ? globalError.message : String(globalError)));
     } finally {
       // FORENSIC: Always restore initial state
       ctx.restore();
