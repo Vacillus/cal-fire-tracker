@@ -6,167 +6,368 @@ interface CalFireMapProps {
   onFireSelect?: (fireData: any) => void;
 }
 
-interface County {
+interface FireData {
+  id: string;
   name: string;
   lat: number;
   lng: number;
-  fires: number;
+  acres: number;
+  containment: number;
+  status: 'Active' | 'Contained' | 'Controlled';
+  county: string;
+  perimeter?: google.maps.LatLngLiteral[];
 }
 
-const californiaCounties: County[] = [
-  { name: 'Los Angeles', lat: 34.0522, lng: -118.2437, fires: 3 },
-  { name: 'San Diego', lat: 32.7157, lng: -117.1611, fires: 2 },
-  { name: 'Orange', lat: 33.7175, lng: -117.8311, fires: 1 },
-  { name: 'Riverside', lat: 33.7537, lng: -116.3019, fires: 4 },
-  { name: 'San Bernardino', lat: 34.4764, lng: -117.3089, fires: 2 },
-  { name: 'Ventura', lat: 34.3754, lng: -119.0392, fires: 1 },
-  { name: 'Fresno', lat: 36.7378, lng: -119.7871, fires: 3 },
-  { name: 'Sacramento', lat: 38.5816, lng: -121.4944, fires: 1 },
-  { name: 'Alameda', lat: 37.6017, lng: -121.7195, fires: 0 },
-  { name: 'Santa Clara', lat: 37.3541, lng: -121.9552, fires: 1 },
-  { name: 'Contra Costa', lat: 37.9161, lng: -121.9364, fires: 0 },
-  { name: 'Kern', lat: 35.3733, lng: -119.0187, fires: 2 },
-  { name: 'San Francisco', lat: 37.7749, lng: -122.4194, fires: 0 },
-  { name: 'Tulare', lat: 36.2077, lng: -118.8397, fires: 1 },
-  { name: 'Santa Barbara', lat: 34.4208, lng: -119.6982, fires: 2 },
-  { name: 'Sonoma', lat: 38.5780, lng: -122.9888, fires: 1 },
-  { name: 'Placer', lat: 39.0840, lng: -120.7537, fires: 0 },
-  { name: 'Butte', lat: 39.6558, lng: -121.6078, fires: 5 },
-  { name: 'Napa', lat: 38.5025, lng: -122.2654, fires: 2 },
-  { name: 'Shasta', lat: 40.7751, lng: -122.4514, fires: 3 }
+// Mock fire data with accurate coordinates
+const mockFireData: FireData[] = [
+  {
+    id: '1',
+    name: 'Park Fire',
+    lat: 39.8056,
+    lng: -121.6219,
+    acres: 429603,
+    containment: 100,
+    status: 'Controlled',
+    county: 'Butte',
+    perimeter: [
+      { lat: 39.8256, lng: -121.6419 },
+      { lat: 39.8156, lng: -121.6019 },
+      { lat: 39.7856, lng: -121.6019 },
+      { lat: 39.7856, lng: -121.6419 }
+    ]
+  },
+  {
+    id: '2',
+    name: 'Vista Fire',
+    lat: 34.32,
+    lng: -117.48,
+    acres: 2920,
+    containment: 77,
+    status: 'Active',
+    county: 'San Bernardino',
+    perimeter: [
+      { lat: 34.3300, lng: -117.4900 },
+      { lat: 34.3200, lng: -117.4700 },
+      { lat: 34.3100, lng: -117.4700 },
+      { lat: 34.3100, lng: -117.4900 }
+    ]
+  },
+  {
+    id: '3',
+    name: 'Alexander Fire',
+    lat: 33.55,
+    lng: -116.85,
+    acres: 5400,
+    containment: 85,
+    status: 'Active',
+    county: 'Riverside',
+    perimeter: [
+      { lat: 33.5600, lng: -116.8600 },
+      { lat: 33.5500, lng: -116.8400 },
+      { lat: 33.5400, lng: -116.8400 },
+      { lat: 33.5400, lng: -116.8600 }
+    ]
+  },
+  {
+    id: '4',
+    name: 'Creek Fire',
+    lat: 37.2,
+    lng: -119.3,
+    acres: 15000,
+    containment: 45,
+    status: 'Active',
+    county: 'Fresno',
+    perimeter: [
+      { lat: 37.2200, lng: -119.3200 },
+      { lat: 37.2000, lng: -119.2800 },
+      { lat: 37.1800, lng: -119.2800 },
+      { lat: 37.1800, lng: -119.3200 }
+    ]
+  },
+  {
+    id: '5',
+    name: 'Glass Fire',
+    lat: 38.5,
+    lng: -122.4,
+    acres: 3200,
+    containment: 60,
+    status: 'Active',
+    county: 'Napa',
+    perimeter: [
+      { lat: 38.5100, lng: -122.4100 },
+      { lat: 38.5000, lng: -122.3900 },
+      { lat: 38.4900, lng: -122.3900 },
+      { lat: 38.4900, lng: -122.4100 }
+    ]
+  },
+  {
+    id: '6',
+    name: 'Pine Ridge Fire',
+    lat: 34.3,
+    lng: -118.1,
+    acres: 8500,
+    containment: 30,
+    status: 'Active',
+    county: 'Los Angeles',
+    perimeter: [
+      { lat: 34.3200, lng: -118.1200 },
+      { lat: 34.3000, lng: -118.0800 },
+      { lat: 34.2800, lng: -118.0800 },
+      { lat: 34.2800, lng: -118.1200 }
+    ]
+  }
 ];
 
+// Custom Fire Overlay Class
+class FireOverlay extends google.maps.OverlayView {
+  private fire: FireData;
+  private div: HTMLElement | null = null;
+  private onFireClick: (fire: FireData) => void;
+
+  constructor(fire: FireData, onFireClick: (fire: FireData) => void) {
+    super();
+    this.fire = fire;
+    this.onFireClick = onFireClick;
+  }
+
+  onAdd() {
+    const div = document.createElement('div');
+    div.style.position = 'absolute';
+    div.style.cursor = 'pointer';
+    div.style.userSelect = 'none';
+    div.style.width = 'auto';
+    div.style.height = 'auto';
+
+    // Create fire marker content
+    const fireIcon = this.fire.status === 'Active' ? '🔥' : '🟡';
+    const bgColor = this.fire.status === 'Active' ? 'bg-red-500' : 'bg-yellow-500';
+    
+    div.innerHTML = `
+      <div class="flex items-center ${bgColor} text-white px-3 py-1 rounded-full shadow-lg text-sm font-semibold transform hover:scale-105 transition-transform">
+        <span class="mr-1">${fireIcon}</span>
+        <span>${this.fire.name}</span>
+        <span class="ml-2 text-xs opacity-75">${this.fire.acres.toLocaleString()}ac</span>
+      </div>
+    `;
+
+    div.addEventListener('click', () => {
+      this.onFireClick(this.fire);
+    });
+
+    this.div = div;
+    const panes = this.getPanes()!;
+    panes.overlayMouseTarget.appendChild(div);
+  }
+
+  draw() {
+    if (this.div) {
+      const overlayProjection = this.getProjection();
+      const position = overlayProjection.fromLatLngToDivPixel(
+        new google.maps.LatLng(this.fire.lat, this.fire.lng)
+      );
+      
+      if (position) {
+        this.div.style.left = position.x - 50 + 'px';
+        this.div.style.top = position.y - 15 + 'px';
+      }
+    }
+  }
+
+  onRemove() {
+    if (this.div) {
+      this.div.parentNode?.removeChild(this.div);
+      this.div = null;
+    }
+  }
+}
+
 export default function CalFireMap({ onFireSelect }: CalFireMapProps) {
-  const [selectedCounty, setSelectedCounty] = useState<County | null>(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedCounty, setSelectedCounty] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate map loading
-    const timer = setTimeout(() => setMapLoaded(true), 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    const initMap = async () => {
+      if (!mapRef.current) return;
 
-  const handleCountyClick = (county: County) => {
-    setSelectedCounty(county);
-    if (onFireSelect && county.fires > 0) {
-      // Simulate fire data for the county
-      onFireSelect({
-        county: county.name,
-        fires: Array.from({ length: county.fires }, (_, i) => ({
-          name: `${county.name} Fire ${i + 1}`,
-          acres: Math.floor(Math.random() * 10000) + 500,
-          startDate: '2024-11-01',
-          containment: Math.floor(Math.random() * 100),
-          cause: 'Under Investigation'
-        }))
-      });
-    }
-  };
+      try {
+        setIsLoading(true);
+        setError(null);
 
-  const getCountyColor = (fires: number) => {
-    if (fires === 0) return 'bg-green-100 hover:bg-green-200 border-green-300';
-    if (fires <= 2) return 'bg-yellow-100 hover:bg-yellow-200 border-yellow-300';
-    if (fires <= 4) return 'bg-orange-100 hover:bg-orange-200 border-orange-300';
-    return 'bg-red-100 hover:bg-red-200 border-red-300';
-  };
+        // Load Google Maps API
+        if (!window.google) {
+          const script = document.createElement('script');
+          script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=geometry`;
+          script.async = true;
+          script.defer = true;
+          
+          await new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        }
 
-  const getFireIcon = (fires: number) => {
-    if (fires === 0) return '✅';
-    if (fires <= 2) return '🟡';
-    if (fires <= 4) return '🟠';
-    return '🔥';
-  };
+        // Create map centered on California
+        const mapInstance = new google.maps.Map(mapRef.current, {
+          center: { lat: 36.7783, lng: -119.4179 },
+          zoom: 6,
+          mapTypeId: google.maps.MapTypeId.TERRAIN,
+          styles: [
+            {
+              featureType: 'administrative.country',
+              elementType: 'geometry.stroke',
+              stylers: [{ color: '#4b6cb7' }]
+            }
+          ]
+        });
 
-  if (!mapLoaded) {
+        // Load and display county boundaries
+        try {
+          const response = await fetch('/california-counties.geojson');
+          const geoData = await response.json();
+          
+          mapInstance.data.addGeoJson(geoData);
+          mapInstance.data.setStyle({
+            fillColor: 'transparent',
+            strokeColor: '#666666',
+            strokeWeight: 2,
+            strokeOpacity: 0.8,
+            clickable: true
+          });
+
+          // County click handler
+          mapInstance.data.addListener('click', (event: any) => {
+            const countyName = event.feature.getProperty('NAME');
+            setSelectedCounty(countyName);
+            
+            if (onFireSelect) {
+              const countyFires = mockFireData.filter(
+                fire => fire.county === countyName
+              );
+              
+              onFireSelect({
+                county: countyName,
+                fires: countyFires.map(fire => ({
+                  name: fire.name,
+                  acres: fire.acres,
+                  startDate: '2024-11-01',
+                  containment: fire.containment,
+                  cause: 'Under Investigation'
+                }))
+              });
+            }
+          });
+
+        } catch (err) {
+          console.warn('Could not load county boundaries:', err);
+        }
+
+        // Add fire overlays
+        mockFireData.forEach(fire => {
+          // Fire perimeter polygon
+          if (fire.perimeter) {
+            const firePolygon = new google.maps.Polygon({
+              paths: fire.perimeter,
+              fillColor: fire.status === 'Active' ? '#ff0000' : '#ffaa00',
+              fillOpacity: 0.3,
+              strokeColor: fire.status === 'Active' ? '#cc0000' : '#dd8800',
+              strokeWeight: 2,
+              strokeOpacity: 0.8
+            });
+            firePolygon.setMap(mapInstance);
+          }
+
+          // Fire overlay marker
+          const fireOverlay = new FireOverlay(fire, (selectedFire) => {
+            if (onFireSelect) {
+              onFireSelect({
+                county: selectedFire.county,
+                fires: [{
+                  name: selectedFire.name,
+                  acres: selectedFire.acres,
+                  startDate: '2024-11-01',
+                  containment: selectedFire.containment,
+                  cause: 'Under Investigation'
+                }]
+              });
+            }
+          });
+          fireOverlay.setMap(mapInstance);
+        });
+
+        setMap(mapInstance);
+        setIsLoading(false);
+
+      } catch (err) {
+        console.error('Error initializing map:', err);
+        setError('Failed to load map. Using API key placeholder - please configure Google Maps API.');
+        setIsLoading(false);
+      }
+    };
+
+    initMap();
+
+    return () => {
+      if (map) {
+        // Cleanup if needed
+      }
+    };
+  }, [onFireSelect]);
+
+  if (error) {
     return (
       <div className="flex items-center justify-center h-full bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
-          <div className="text-gray-600">Loading California Fire Map...</div>
+        <div className="text-center max-w-md">
+          <div className="text-red-500 text-lg font-semibold mb-2">Map Configuration Needed</div>
+          <div className="text-gray-600 text-sm mb-4">{error}</div>
+          <div className="text-xs text-gray-500">
+            Add your Google Maps API key to enable the interactive map
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-blue-50 to-green-50 overflow-auto">
-      {/* Map Title */}
-      <div className="absolute top-4 left-4 bg-white p-3 rounded-lg shadow-lg z-10">
-        <h3 className="text-lg font-semibold text-gray-800">California Counties</h3>
-        <p className="text-sm text-gray-600">Click counties to view fire information</p>
-      </div>
-
-      {/* Legend */}
-      <div className="absolute top-4 right-4 bg-white p-3 rounded-lg shadow-lg z-10">
-        <h4 className="text-sm font-semibold mb-2">Fire Activity</h4>
-        <div className="space-y-1 text-xs">
-          <div className="flex items-center gap-2">
-            <span>✅</span>
-            <span>No Active Fires</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span>🟡</span>
-            <span>1-2 Fires</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span>🟠</span>
-            <span>3-4 Fires</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span>🔥</span>
-            <span>5+ Fires</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Selected County Info */}
-      {selectedCounty && (
-        <div className="absolute bottom-4 left-4 bg-white p-4 rounded-lg shadow-lg z-10 max-w-sm">
-          <h4 className="font-semibold text-gray-800">{selectedCounty.name} County</h4>
-          <div className="mt-2 space-y-1 text-sm text-gray-600">
-            <p>Active Fires: <span className="font-medium text-red-600">{selectedCounty.fires}</span></p>
-            <p>Coordinates: {selectedCounty.lat.toFixed(4)}, {selectedCounty.lng.toFixed(4)}</p>
-            {selectedCounty.fires > 0 && (
-              <p className="text-orange-600 mt-2">⚠️ Click sidebar for detailed fire information</p>
-            )}
+    <div className="relative w-full h-full">
+      {isLoading && (
+        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+            <div className="text-gray-600">Loading geospatial fire map...</div>
           </div>
         </div>
       )}
-
-      {/* County Grid */}
-      <div className="p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 h-full content-start">
-        {californiaCounties.map((county) => (
-          <button
-            key={county.name}
-            onClick={() => handleCountyClick(county)}
-            className={`
-              relative p-4 rounded-lg border-2 transition-all duration-200 
-              ${getCountyColor(county.fires)}
-              ${selectedCounty?.name === county.name ? 'ring-2 ring-blue-500 transform scale-105' : ''}
-            `}
-          >
-            <div className="text-center">
-              <div className="text-2xl mb-1">{getFireIcon(county.fires)}</div>
-              <div className="text-sm font-semibold text-gray-800 leading-tight">
-                {county.name}
-              </div>
-              <div className="text-xs text-gray-600 mt-1">
-                {county.fires} fires
-              </div>
-            </div>
-            
-            {county.fires > 0 && (
-              <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {county.fires}
-              </div>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Interactive Elements */}
-      <div className="absolute bottom-4 right-4 text-xs text-gray-500 bg-white p-2 rounded">
-        Interactive County Map • Click to explore
+      
+      <div ref={mapRef} className="w-full h-full min-h-[400px] md:min-h-[600px]" />
+      
+      {selectedCounty && !isLoading && (
+        <div className="absolute top-4 left-4 bg-white p-3 rounded-lg shadow-lg z-10">
+          <p className="text-sm font-semibold">Selected: {selectedCounty} County</p>
+          <p className="text-xs text-gray-600">Click fires for detailed information</p>
+        </div>
+      )}
+      
+      {/* Map Legend */}
+      <div className="absolute bottom-4 right-4 bg-white p-3 rounded-lg shadow-lg z-10">
+        <h4 className="text-sm font-semibold mb-2">Fire Legend</h4>
+        <div className="space-y-1 text-xs">
+          <div className="flex items-center gap-2">
+            <span>🔥</span>
+            <span>Active Fire</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span>🟡</span>
+            <span>Contained Fire</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 border-2 border-gray-600"></div>
+            <span>County Boundaries</span>
+          </div>
+        </div>
       </div>
     </div>
   );
