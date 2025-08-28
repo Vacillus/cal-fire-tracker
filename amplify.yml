@@ -19,11 +19,16 @@ frontend:
         - python3 trace_file_fix.py
         - echo "[NUCLEAR FIX] Creating every possible trace format..."
         - python3 nuclear_trace_fix.py
-        - echo "[VALIDATION] Verifying all trace files..."
-        - ls -la out/trace* out/*.nft.json out/server/trace* 2>/dev/null | head -20 || true
+        - echo "[STEP 3] Ensuring trace files in .next directory..."
+        - cp -r out/* .next/ 2>/dev/null || true
+        - cp out/trace .next/trace 2>/dev/null || true
+        - mkdir -p .next/server && cp -r out/.next/server/* .next/server/ 2>/dev/null || true
+        - echo "[VALIDATION] Verifying .next directory contents..."
+        - ls -la .next/ | head -20
+        - ls -la .next/server/ 2>/dev/null | head -10 || true
         - echo "[MUTATION PATCH] Complete - Static build with SSR scaffold"
   artifacts:
-    baseDirectory: .next/server
+    baseDirectory: .next
     files:
       - '**/*'
   cache:

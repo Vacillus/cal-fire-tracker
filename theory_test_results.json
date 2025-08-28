@@ -1,0 +1,6 @@
+{
+  "outputFileTracing_needed": true,
+  "hash_mismatch": false,
+  "path_misconfigured": true,
+  "recommended_baseDirectory": ".next/server"
+}

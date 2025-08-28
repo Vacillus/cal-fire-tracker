@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  // Temporarily remove 'export' to generate server files
+  // output: 'export',
   images: {
     unoptimized: true
   },
@@ -8,7 +9,8 @@ const nextConfig = {
   trailingSlash: true,
   experimental: {
     outputFileTracing: true,
-    outputFileTracingRoot: process.cwd()
+    outputFileTracingRoot: process.cwd(),
+    outputStandalone: true
   }
 };
 
