@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
+import GoogleFireMap from './components/GoogleFireMap';
 import EmbeddedFireMap from './components/EmbeddedFireMap';
 import FireDetailModal from './components/FireDetailModal';
 
@@ -27,11 +27,7 @@ export default function Home() {
   const [fireData, setFireData] = useState<FireData[]>([]);
   const [selectedFire, setSelectedFire] = useState<FireData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [useEmbeddedMap, setUseEmbeddedMap] = useState(true);
-  const CalFireMap = dynamic(() => import('./components/CalFireMap'), {
-    ssr: false,
-    loading: () => <div className="flex items-center justify-center h-full bg-gray-100"><p>Loading map...</p></div>
-  });
+  const [mapType, setMapType] = useState<'google' | 'embedded'>('google');
 
   useEffect(() => {
     // Mock fire data - in production this would come from CAL FIRE API
@@ -227,10 +223,10 @@ export default function Home() {
             </div>
             <div className="flex gap-4 items-center">
               <button
-                onClick={() => setUseEmbeddedMap(!useEmbeddedMap)}
+                onClick={() => setMapType(mapType === 'google' ? 'embedded' : 'google')}
                 className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm transition-colors"
               >
-                {useEmbeddedMap ? 'Switch to Custom Map' : 'Switch to Official Map'}
+                {mapType === 'google' ? 'Switch to CAL FIRE Map' : 'Switch to Google Maps'}
               </button>
               <div className="flex gap-6 text-right">
               <div>
@@ -255,14 +251,29 @@ export default function Home() {
       <div className="flex-1 flex flex-col md:flex-row">
         {/* Map Section */}
         <div className="flex-1 relative min-h-[50vh] md:min-h-0">
-          {useEmbeddedMap ? (
-            <EmbeddedFireMap 
+          {mapType === 'google' ? (
+            <GoogleFireMap 
               onFireSelect={(data) => {
-                handleFireSelect(data);
+                // Convert Google Maps data format to match our FireData interface
+                const fireData: FireData = {
+                  id: data.id?.toString() || '',
+                  name: data.name || '',
+                  county: data.county || '',
+                  lat: data.lat || 0,
+                  lng: data.lng || 0,
+                  acres: data.acres || 0,
+                  containment: data.containment || 0,
+                  status: data.status || 'Active',
+                  timestamp: new Date().toLocaleString(),
+                  personnel: data.personnel || 0,
+                  structures_threatened: data.structures_threatened || 0,
+                  evacuation_orders: data.evacuation_orders || false
+                };
+                handleFireSelect(fireData);
               }}
             />
           ) : (
-            <CalFireMap 
+            <EmbeddedFireMap 
               onFireSelect={(data) => {
                 handleFireSelect(data);
               }}
