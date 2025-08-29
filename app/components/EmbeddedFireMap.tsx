@@ -3,20 +3,15 @@
 import { useState } from 'react';
 
 interface EmbeddedFireMapProps {
-  onFireSelect?: (data: any) => void;
+  onFireSelect?: (data: unknown) => void;
 }
 
-export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) {
+export default function EmbeddedFireMap({ }: EmbeddedFireMapProps) {
   const [mapType, setMapType] = useState<'arcgis' | 'mapbox'>('arcgis');
 
   // ArcGIS Cal Fire Public Information Map
   const arcgisUrl = "https://calfire-forestry.maps.arcgis.com/apps/webappviewer/index.html?id=395380c393414c8aad80eb4cc7252b05";
   
-  // Alternative: USGS Wildfire Activity Map
-  const usgsUrl = "https://wildfire.usgs.gov/viewer/";
-  
-  // Alternative: InciWeb embedded map
-  const inciwebUrl = "https://inciweb.wildfire.gov/";
 
   // Mapbox Studio public style with fire data (you can create your own style in Mapbox Studio)
   const mapboxStudioUrl = "https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12.html?title=true&access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA#8/37.5/-119.5";

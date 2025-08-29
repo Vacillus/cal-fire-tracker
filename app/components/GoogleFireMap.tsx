@@ -11,6 +11,9 @@ interface FireMapData {
   acres: number;
   containment: number;
   status: string;
+  personnel?: number;
+  structures_threatened?: number;
+  evacuation_orders?: boolean;
 }
 
 interface GoogleFireMapProps {

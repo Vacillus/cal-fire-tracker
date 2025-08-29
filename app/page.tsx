@@ -263,7 +263,7 @@ export default function Home() {
                   lng: data.lng || 0,
                   acres: data.acres || 0,
                   containment: data.containment || 0,
-                  status: data.status || 'Active',
+                  status: (data.status as 'Active' | 'Contained' | 'Controlled') || 'Active',
                   timestamp: new Date().toLocaleString(),
                   personnel: data.personnel || 0,
                   structures_threatened: data.structures_threatened || 0,
@@ -273,11 +273,7 @@ export default function Home() {
               }}
             />
           ) : (
-            <EmbeddedFireMap 
-              onFireSelect={(data) => {
-                handleFireSelect(data);
-              }}
-            />
+            <EmbeddedFireMap />
           )}
         </div>
 
