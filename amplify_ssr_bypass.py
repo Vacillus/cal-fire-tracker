@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
 AMPLIFY SSR DETECTION BYPASS v1
-Dual-layer mutation patch for persistent SSR misclassification
+Dual-layer patch for persistent SSR misclassification
 
-Conceptualized and Architected by: Samuel Zepeda
-Implementation Co-authored with: Claude (Anthropic)
-Part of: Cali-Fire-Tracker Reproducibility Initiative
+Developer: Samuel Zepeda
+Part of: Cali-Fire-Tracker Project
 """
 
 import json

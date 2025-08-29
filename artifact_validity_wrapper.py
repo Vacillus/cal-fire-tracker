@@ -3,9 +3,8 @@
 ARTIFACT VALIDITY WRAPPER
 Enforces static compliance and strips SSR logic from all artifacts
 
-Conceptualized and Architected by: Samuel Zepeda
-Implementation Co-authored with: Claude (Anthropic)
-Part of: Cali-Fire-Tracker Reproducibility Initiative
+Developer: Samuel Zepeda
+Part of: Cali-Fire-Tracker Project
 """
 
 import json

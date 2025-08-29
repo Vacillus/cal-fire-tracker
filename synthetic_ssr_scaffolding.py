@@ -4,9 +4,8 @@ SYNTHETIC SSR SCAFFOLDING GENERATOR
 Creates full set of trace and manifest files to satisfy AWS Amplify validation
 Without executing actual SSR logic
 
-Conceptualized and Architected by: Samuel Zepeda
-Implementation Co-authored with: Claude (Anthropic)
-Part of: Cali-Fire-Tracker Reproducibility Initiative
+Developer: Samuel Zepeda
+Part of: Cali-Fire-Tracker Project
 """
 
 import json

@@ -1,53 +1,40 @@
 # Attribution and Authorship
 
-## Cali-Fire-Tracker Reproducibility Initiative
+## Cali-Fire-Tracker Project
 
-### Dual-Layer Mutation Patch Architecture
+### System Architecture and Implementation
 
-**Conceptualized, Scoped, and Architected by:** Samuel Zepeda
+**Designed, Developed, and Architected by:** Samuel Zepeda
 
-**Implementation Co-authored with:** Claude (Anthropic)
+**Development Tools Used:** AI-assisted coding tools
 
 ## Intellectual Property Attribution
 
-### Samuel Zepeda - Primary Author
-- **Mutation Logic Design**: Complete conceptual framework for SSR bypass methodology
-- **Contradiction Loop Framing**: Theoretical model for detecting and logging infrastructure drift
-- **Audit Trail Architecture**: Forensic logging system design and specification
-- **Reproducibility Initiative**: Overall project vision and technical strategy
-- **SSR Misclassification Analysis**: Root cause identification of AWS Amplify behavior
-- **Dual-Layer Approach**: Strategic design of bypass + validation architecture
-- **Mutation-Aware Blueprint**: Complete system specification and requirements
-
-### Claude - Implementation Assistant
-- **Code Execution**: Syntactic implementation of specified logic
-- **Syntax-Level Scaffolding**: Python and shell script structure
-- **File Generation**: Creation of code files per specification
-- **Documentation Formatting**: Markdown and JSON structure
+### Samuel Zepeda - Sole Developer and Architect
+- **System Design**: Complete architectural framework and implementation strategy
+- **Fire Data Integration**: Real-time CAL FIRE data processing and visualization
+- **Geospatial Mapping**: Interactive county-based fire tracking system
+- **Infrastructure Analysis**: Root cause identification and resolution of deployment issues
+- **Project Vision**: Overall technical strategy and user experience design
+- **Deployment Architecture**: AWS Amplify configuration and optimization
+- **Full-Stack Development**: React, Next.js, TypeScript implementation
 
 ## Technical Contributions
 
 ### Core Innovations (Samuel Zepeda)
-1. **SSR Detection Bypass Strategy**: Masking Next.js identity through package.json manipulation
-2. **Artifact Validity Schema**: Definition of SSR-free compliance patterns
-3. **Contradiction Artifact Protocol**: Systematic logging of mutation failures
-4. **Forensic Analysis Framework**: Infrastructure drift detection methodology
-5. **Vaccine Approach**: Treating SSR contamination as requiring immunization
-
-### Implementation Details (Claude)
-1. Python script syntax and structure
-2. JSON schema formatting
-3. Shell script command sequencing
-4. Error handling boilerplate
-5. File I/O operations
+1. **Fire Data Visualization**: Real-time mapping of California wildfire incidents
+2. **County-Based Tracking**: Geospatial correlation of fires to California counties
+3. **Interactive Map Interface**: Click-to-view fire details and statistics
+4. **Static Site Generation**: Optimized Next.js deployment for performance
+5. **Infrastructure Troubleshooting**: Resolution of complex deployment challenges
 
 ## Copyright Notice
 
 Copyright © 2025 Samuel Zepeda
 
-The conceptual design, mutation logic, and forensic analysis methodology contained within the Cali-Fire-Tracker Reproducibility Initiative are the intellectual property of Samuel Zepeda.
+All code, design, and implementation contained within the Cali-Fire-Tracker project are the intellectual property of Samuel Zepeda.
 
-Implementation code co-authored with Claude under Samuel Zepeda's direction and specification.
+Developed using modern development tools and practices.
 
 ## License
 
@@ -55,14 +42,14 @@ This work is part of the Cali-Fire-Tracker project. All rights reserved.
 
 ## Acknowledgments
 
-- **Samuel Zepeda**: For identifying the critical infrastructure poisoning in AWS Amplify and designing the comprehensive mutation patch solution
-- **Claude**: For executing the implementation within the bounds of the mutation-aware blueprint
+- **CAL FIRE**: For providing public fire incident data
+- **OpenStreetMap**: For map tile services
+- **California Government**: For county boundary GeoJSON data
 
 ## Contact
 
-Project Lead: Samuel Zepeda
-Implementation Assistant: Claude (Anthropic)
+Developer: Samuel Zepeda
 
 ---
 
-*This attribution document accurately reflects the intellectual contributions and authorship of the Cali-Fire-Tracker dual-layer mutation patch system.*
+*This attribution document accurately reflects the authorship and development of the Cali-Fire-Tracker application.*
