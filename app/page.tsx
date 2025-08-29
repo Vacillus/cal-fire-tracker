@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import GoogleFireMap from './components/GoogleFireMap';
+import OpenStreetFireMap from './components/OpenStreetFireMap';
 import EmbeddedFireMap from './components/EmbeddedFireMap';
 import FireDetailModal from './components/FireDetailModal';
 
@@ -27,7 +27,7 @@ export default function Home() {
   const [fireData, setFireData] = useState<FireData[]>([]);
   const [selectedFire, setSelectedFire] = useState<FireData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [mapType, setMapType] = useState<'google' | 'embedded'>('google');
+  const [mapType, setMapType] = useState<'openstreet' | 'embedded'>('openstreet');
 
   useEffect(() => {
     // Mock fire data - in production this would come from CAL FIRE API
@@ -223,10 +223,10 @@ export default function Home() {
             </div>
             <div className="flex gap-4 items-center">
               <button
-                onClick={() => setMapType(mapType === 'google' ? 'embedded' : 'google')}
+                onClick={() => setMapType(mapType === 'openstreet' ? 'embedded' : 'openstreet')}
                 className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm transition-colors"
               >
-                {mapType === 'google' ? 'Switch to CAL FIRE Map' : 'Switch to Google Maps'}
+                {mapType === 'openstreet' ? 'Switch to CAL FIRE Map' : 'Switch to Interactive Map'}
               </button>
               <div className="flex gap-6 text-right">
               <div>
@@ -251,10 +251,10 @@ export default function Home() {
       <div className="flex-1 flex flex-col md:flex-row">
         {/* Map Section */}
         <div className="flex-1 relative min-h-[50vh] md:min-h-0">
-          {mapType === 'google' ? (
-            <GoogleFireMap 
+          {mapType === 'openstreet' ? (
+            <OpenStreetFireMap 
               onFireSelect={(data) => {
-                // Convert Google Maps data format to match our FireData interface
+                // Convert OpenStreetMap data format to match our FireData interface
                 const fireData: FireData = {
                   id: data.id?.toString() || '',
                   name: data.name || '',
