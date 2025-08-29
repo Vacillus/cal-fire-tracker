@@ -1,3 +1,14 @@
+/**
+ * Cal-Fire-Tracker Main Page
+ * Developer: Samuel Zepeda
+ * 
+ * While I explored ideas with Claude during development, this artifact was
+ * architected, coded, and mutation tracked by me. Every contradiction loop,
+ * forensic pivot, and audit trail scaffold reflects my design decisions and
+ * technical authorship. AI tools supported the process, but the responsibility,
+ * modularity, and mutation awareness logic are my own.
+ */
+
 'use client';
 
 import { useState, useEffect } from 'react';

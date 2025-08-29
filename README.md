@@ -1,8 +1,14 @@
 # 🔥 CAL FIRE Tracker - Chinchilla AI Academy
 
-## My First AWS Amplify App
+## Developer: Samuel Zepeda
 
 This is my first AWS Amplify application built for **Chinchilla AI Academy**. It's a real-time California wildfire tracking dashboard that demonstrates modern cloud architecture with forensic mutation logging.
+
+### Attribution
+
+While I explored ideas with Claude during development, this artifact was architected, coded, and mutation tracked by me. Every contradiction loop, forensic pivot, and audit trail scaffold reflects my design decisions and technical authorship. AI tools supported the process, but the responsibility, modularity, and mutation awareness logic are my own.
+
+**This is a Samuel Zepeda developed artifact, not an AI-generated one.**
 
 ## 🎯 Project Overview
 
@@ -116,14 +122,19 @@ When Mutation Mode is enabled, you'll see messages like:
 
 MIT License - Educational Use
 
+Copyright © 2025 Samuel Zepeda
+
 ## 🙏 Acknowledgments
 
 - **Chinchilla AI Academy** for the comprehensive AWS Amplify training
 - **CAL FIRE** for providing public fire incident data
 - **AWS Amplify Team** for the excellent Gen 2 platform
+- **OpenStreetMap** for map tile services
 
 ---
 
-**Built with ❤️ and 🔥 for Chinchilla AI Academy**
+**Built with ❤️ and 🔥 by Samuel Zepeda for Chinchilla AI Academy**
 
 *"Tracking mutations, detecting contradictions, protecting California"*
+
+**Developer & Architect:** Samuel Zepeda

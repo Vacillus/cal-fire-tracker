@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 """
 NUCLEAR TRACE FIX - Create every possible trace file format
+
+Developer: Samuel Zepeda
+Technical Authorship: Samuel Zepeda
+
+While I explored ideas with Claude during development, this artifact was 
+architected, coded, and mutation tracked by me. Every contradiction loop, 
+forensic pivot, and audit trail scaffold reflects my design decisions and 
+technical authorship. AI tools supported the process, but the responsibility, 
+modularity, and mutation awareness logic are my own.
 """
 
 import json

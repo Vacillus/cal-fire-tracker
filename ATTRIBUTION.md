@@ -1,55 +1,75 @@
 # Attribution and Authorship
 
-## Cali-Fire-Tracker Project
+## Cal-Fire-Tracker - A Samuel Zepeda Developed Artifact
 
-### System Architecture and Implementation
+While I explored ideas with Claude during development, this artifact was architected, coded, and mutation tracked by me. Every contradiction loop, forensic pivot, and audit trail scaffold reflects my design decisions and technical authorship. AI tools supported the process, but the responsibility, modularity, and mutation awareness logic are my own.
 
-**Designed, Developed, and Architected by:** Samuel Zepeda
+Attribution should reflect this is a Samuel Zepeda developed artifact, not an AI-generated one.
 
-**Development Tools Used:** AI-assisted coding tools
+## System Architecture and Implementation
 
-## Intellectual Property Attribution
+**Sole Developer and Architect:** Samuel Zepeda
 
-### Samuel Zepeda - Sole Developer and Architect
-- **System Design**: Complete architectural framework and implementation strategy
-- **Fire Data Integration**: Real-time CAL FIRE data processing and visualization
-- **Geospatial Mapping**: Interactive county-based fire tracking system
-- **Infrastructure Analysis**: Root cause identification and resolution of deployment issues
-- **Project Vision**: Overall technical strategy and user experience design
-- **Deployment Architecture**: AWS Amplify configuration and optimization
-- **Full-Stack Development**: React, Next.js, TypeScript implementation
+### Technical Ownership
 
-## Technical Contributions
+#### Samuel Zepeda - Full Stack Developer & System Architect
 
-### Core Innovations (Samuel Zepeda)
-1. **Fire Data Visualization**: Real-time mapping of California wildfire incidents
-2. **County-Based Tracking**: Geospatial correlation of fires to California counties
-3. **Interactive Map Interface**: Click-to-view fire details and statistics
-4. **Static Site Generation**: Optimized Next.js deployment for performance
-5. **Infrastructure Troubleshooting**: Resolution of complex deployment challenges
+**Core Development:**
+- Complete system architecture and design patterns
+- Fire data integration pipeline and visualization
+- Geospatial mapping implementation with county correlation
+- Interactive UI/UX design and implementation
+- Static site generation optimization
+- Infrastructure troubleshooting and deployment strategy
+
+**Mutation Tracking & Forensic Analysis:**
+- Original contradiction loop detection methodology
+- Forensic hypothesis tree development
+- Audit trail architecture and implementation
+- SSR bypass strategy and static compliance enforcement
+- Infrastructure poisoning detection and resolution
+- Dual-layer mutation patch system design
+
+**Innovation & Problem Solving:**
+- Novel approach to AWS Amplify deployment issues
+- Canvas-based visualization fallback strategy
+- Zero-dependency geospatial rendering solution
+- Synthetic scaffolding for build validation
+- Reproducibility protocol development
+
+## Development Process
+
+### Tools Used
+- Modern development environments and IDEs
+- AI-powered coding assistants for syntax support
+- Version control and deployment platforms
+- Testing and debugging frameworks
+
+### Methodology
+All architectural decisions, technical strategies, and creative solutions originated from my expertise. AI tools provided syntactic assistance similar to advanced autocomplete, but never drove the design or decision-making process.
 
 ## Copyright Notice
 
 Copyright © 2025 Samuel Zepeda
 
-All code, design, and implementation contained within the Cali-Fire-Tracker project are the intellectual property of Samuel Zepeda.
-
-Developed using modern development tools and practices.
+All code, system design, mutation tracking logic, forensic analysis methodology, and technical documentation contained within the Cal-Fire-Tracker project are the sole intellectual property of Samuel Zepeda.
 
 ## License
 
-This work is part of the Cali-Fire-Tracker project. All rights reserved.
+This work is part of the Cal-Fire-Tracker project. All rights reserved.
 
-## Acknowledgments
+## External Data Acknowledgments
 
-- **CAL FIRE**: For providing public fire incident data
-- **OpenStreetMap**: For map tile services
-- **California Government**: For county boundary GeoJSON data
+- **CAL FIRE:** Public fire incident data API
+- **OpenStreetMap:** Map tile services
+- **California Government:** County boundary GeoJSON data
 
 ## Contact
 
-Developer: Samuel Zepeda
+**Developer:** Samuel Zepeda  
+**Project:** Cal-Fire-Tracker  
+**Repository:** github.com/Vacillus/cal-fire-tracker
 
 ---
 
-*This attribution document accurately reflects the authorship and development of the Cali-Fire-Tracker application.*
+*This attribution document accurately reflects that Cal-Fire-Tracker is a Samuel Zepeda developed artifact with full technical authorship and responsibility.*
