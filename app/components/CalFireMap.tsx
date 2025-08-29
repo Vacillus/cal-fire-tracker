@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 
 interface CalFireMapProps {
   onFireSelect?: (fireData: FireData) => void;

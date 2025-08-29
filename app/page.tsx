@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import CalFireMap from './components/CalFireMap';
+import dynamic from 'next/dynamic';
 import EmbeddedFireMap from './components/EmbeddedFireMap';
 import FireDetailModal from './components/FireDetailModal';
 
@@ -28,6 +28,10 @@ export default function Home() {
   const [selectedFire, setSelectedFire] = useState<FireData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [useEmbeddedMap, setUseEmbeddedMap] = useState(true);
+  const CalFireMap = dynamic(() => import('./components/CalFireMap'), {
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center h-full bg-gray-100"><p>Loading map...</p></div>
+  });
 
   useEffect(() => {
     // Mock fire data - in production this would come from CAL FIRE API
