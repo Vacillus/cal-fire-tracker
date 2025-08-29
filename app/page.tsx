@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import CalFireMap from './components/CalFireMap';
+import EmbeddedFireMap from './components/EmbeddedFireMap';
 import FireDetailModal from './components/FireDetailModal';
 
 interface FireData {
@@ -26,6 +27,7 @@ export default function Home() {
   const [fireData, setFireData] = useState<FireData[]>([]);
   const [selectedFire, setSelectedFire] = useState<FireData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [useEmbeddedMap, setUseEmbeddedMap] = useState(true);
 
   useEffect(() => {
     // Mock fire data - in production this would come from CAL FIRE API
@@ -219,7 +221,14 @@ export default function Home() {
               <h1 className="text-3xl font-bold">California Fire Tracker</h1>
               <p className="text-orange-100 mt-1">Real-time wildfire monitoring system</p>
             </div>
-            <div className="flex gap-6 text-right">
+            <div className="flex gap-4 items-center">
+              <button
+                onClick={() => setUseEmbeddedMap(!useEmbeddedMap)}
+                className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm transition-colors"
+              >
+                {useEmbeddedMap ? 'Switch to Custom Map' : 'Switch to Official Map'}
+              </button>
+              <div className="flex gap-6 text-right">
               <div>
                 <div className="text-2xl font-bold">{activeFiresCount}</div>
                 <div className="text-sm text-orange-100">Active Fires</div>
@@ -233,6 +242,7 @@ export default function Home() {
                 <div className="text-sm text-orange-100">Personnel</div>
               </div>
             </div>
+            </div>
           </div>
         </div>
       </header>
@@ -241,12 +251,19 @@ export default function Home() {
       <div className="flex-1 flex flex-col md:flex-row">
         {/* Map Section */}
         <div className="flex-1 relative min-h-[50vh] md:min-h-0">
-          <CalFireMap 
-            onFireSelect={(data) => {
-              // Handle fire selection directly
-              handleFireSelect(data);
-            }}
-          />
+          {useEmbeddedMap ? (
+            <EmbeddedFireMap 
+              onFireSelect={(data) => {
+                handleFireSelect(data);
+              }}
+            />
+          ) : (
+            <CalFireMap 
+              onFireSelect={(data) => {
+                handleFireSelect(data);
+              }}
+            />
+          )}
         </div>
 
         {/* Fire List Sidebar */}
