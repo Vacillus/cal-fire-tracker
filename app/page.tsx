@@ -39,8 +39,9 @@ export default function Home() {
   const [selectedFire, setSelectedFire] = useState<FireData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mapType, setMapType] = useState<'openstreet' | 'embedded'>('openstreet');
+  const [lastUpdate, setLastUpdate] = useState<string>(new Date().toLocaleString());
 
-  useEffect(() => {
+  const fetchFireData = () => {
     // Mock fire data - in production this would come from CAL FIRE API
     const mockData: FireData[] = [
       {
@@ -207,10 +208,42 @@ export default function Home() {
         evacuation_orders: false,
         started_date: '2024-11-10',
         cause: 'Power Lines'
+      },
+      {
+        id: '11',
+        name: 'San Pedro Lake Fire',
+        county: 'Santa Clara',
+        city: 'Morgan Hill',
+        lat: 37.0851,
+        lng: -121.5146,
+        acres: 1850,
+        containment: 15,
+        status: 'Active',
+        timestamp: new Date().toLocaleString(),
+        personnel: 320,
+        structures_threatened: 85,
+        evacuation_orders: true,
+        started_date: '2025-09-02',
+        cause: 'Under Investigation'
       }
     ];
     
     setFireData(mockData);
+    setLastUpdate(new Date().toLocaleString());
+  };
+
+  useEffect(() => {
+    // Initial data fetch
+    fetchFireData();
+    
+    // Set up 30-minute interval for updates (30 * 60 * 1000 milliseconds)
+    const intervalId = setInterval(() => {
+      fetchFireData();
+      console.log('Fire data updated at:', new Date().toLocaleString());
+    }, 30 * 60 * 1000);
+    
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleFireSelect = (fire: FireData) => {
@@ -230,7 +263,7 @@ export default function Home() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold">California Fire Tracker</h1>
-              <p className="text-orange-100 mt-1">Real-time wildfire monitoring system</p>
+              <p className="text-orange-100 mt-1">Real-time wildfire monitoring • Last updated: {lastUpdate}</p>
             </div>
             <div className="flex gap-4 items-center">
               <button
