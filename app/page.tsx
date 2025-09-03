@@ -14,6 +14,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import EmbeddedFireMap from './components/EmbeddedFireMap';
 import FireDetailModal from './components/FireDetailModal';
+import { fetchActiveFiresGeoJson } from './lib/calFireGeoJson';
 
 interface FireData {
   id: string;
@@ -40,7 +41,7 @@ export default function Home() {
   const [lastUpdate, setLastUpdate] = useState<string>(new Date().toLocaleString());
   const [updateCount, setUpdateCount] = useState<number>(0);
 
-  const fetchFireData = useCallback(() => {
+  const fetchFireData = useCallback(async () => {
     // Log mutation for tracking data updates
     const mutationLog = {
       timestamp: new Date().toISOString(),
@@ -51,8 +52,39 @@ export default function Home() {
     };
     console.log('[MUTATION LOG]', mutationLog);
     
-    // Mock fire data - in production this would come from CAL FIRE API
-    const mockData: FireData[] = [
+    try {
+      // Fetch real data from CAL FIRE API
+      const realData = await fetchActiveFiresGeoJson();
+      
+      if (realData && realData.length > 0) {
+        // Convert API data to our FireData format
+        const apiData: FireData[] = realData.map(fire => ({
+          id: fire.id,
+          name: fire.name,
+          county: fire.county,
+          city: fire.location,
+          lat: fire.lat,
+          lng: fire.lng,
+          acres: fire.acres,
+          containment: fire.containment,
+          status: fire.status,
+          timestamp: fire.timestamp || new Date().toLocaleString(),
+          personnel: fire.personnel || 0,
+          structures_threatened: fire.structures_threatened || 0,
+          evacuation_orders: fire.evacuation_orders || false,
+          started_date: fire.started_date,
+          cause: fire.cause
+        }));
+        
+        setFireData(apiData);
+        setLastUpdate(new Date().toLocaleString());
+        setUpdateCount(prev => prev + 1);
+        
+        console.log('[CAL_FIRE_API] Updated with', apiData.length, 'fires');
+      } else {
+        // Fall back to static data if API fails
+        console.warn('Using fallback static data');
+        const mockData: FireData[] = [
       {
         id: '1',
         name: 'Park Fire',
@@ -252,11 +284,35 @@ export default function Home() {
         started_date: '2025-09-01',
         cause: 'Lightning'
       }
-    ];
-    
-    setFireData(mockData);
-    setLastUpdate(new Date().toLocaleString());
-    setUpdateCount(prev => prev + 1);
+        ];
+        
+        setFireData(mockData);
+        setLastUpdate(new Date().toLocaleString());
+        setUpdateCount(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error('Failed to fetch CAL FIRE data:', error);
+      // Use static data as fallback
+      const mockData: FireData[] = [
+        {
+          id: '1',
+          name: 'Fallback Fire Data',
+          county: 'Unknown',
+          lat: 36.7783,
+          lng: -119.4179,
+          acres: 1000,
+          containment: 50,
+          status: 'Active',
+          timestamp: new Date().toLocaleString(),
+          personnel: 100,
+          structures_threatened: 10,
+          evacuation_orders: false
+        }
+      ];
+      setFireData(mockData);
+      setLastUpdate(new Date().toLocaleString());
+      setUpdateCount(prev => prev + 1);
+    }
     
     // Store mutation log in localStorage for forensic analysis
     if (typeof window !== 'undefined') {
@@ -272,11 +328,11 @@ export default function Home() {
     // Initial data fetch
     fetchFireData();
     
-    // Set up 5-minute interval for updates (5 * 60 * 1000 milliseconds)
+    // Set up 2-minute interval for updates from real API
     const intervalId = setInterval(() => {
       fetchFireData();
-      console.log('[AUTO-UPDATE] Fire data refreshed at:', new Date().toLocaleString());
-    }, 5 * 60 * 1000);
+      console.log('[AUTO-UPDATE] Fire data refreshed from CAL FIRE API at:', new Date().toLocaleString());
+    }, 2 * 60 * 1000); // 2 minutes
     
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);

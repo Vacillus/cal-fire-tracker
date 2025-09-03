@@ -1,26 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-
-interface FireIncident {
-  id: string;
-  name: string;
-  county: string;
-  lat: number;
-  lng: number;
-  acres: number;
-  containment: number;
-  status: 'Active' | 'Contained' | 'Controlled';
-  personnel?: number;
-  structures_threatened?: number;
-  evacuation_orders?: boolean;
-  started_date?: string;
-  cause?: string;
-  timestamp?: string;
-}
+import { fetchActiveFiresGeoJson, type FireIncident as FireData } from '../lib/calFireGeoJson';
 
 interface EmbeddedFireMapProps {
-  onFireSelect?: (data: FireIncident) => void;
+  onFireSelect?: (data: FireData) => void;
 }
 
 // Mutation logger
@@ -52,11 +36,12 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
   const layerGroupRef = useRef<any>(null);
   const [selectedLayer, setSelectedLayer] = useState<'terrain' | 'satellite' | 'street'>('terrain');
   const [showPerimeters, setShowPerimeters] = useState(true);
-  const [fireData, setFireData] = useState<FireIncident[]>([]);
+  const [fireData, setFireData] = useState<FireData[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Comprehensive fire data including San Pedro Reservoir fires
-  const staticFireData: FireIncident[] = [
+  // Fallback static data if API fails
+  const staticFireData: FireData[] = [
     {
       id: '1',
       name: 'Park Fire',
@@ -207,34 +192,47 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fetch and update fire data
-  const fetchFireData = useCallback(() => {
+  // Fetch real fire data from CAL FIRE API
+  const fetchFireData = useCallback(async () => {
     logMapMutation('FETCH_FIRE_DATA', { 
-      source: 'static_with_realtime_simulation',
+      source: 'CAL_FIRE_GEOJSON_API',
       timestamp: new Date().toISOString() 
     });
     
-    // Simulate real-time updates by slightly varying fire data
-    const updatedData = staticFireData.map(fire => ({
-      ...fire,
-      timestamp: new Date().toLocaleString(),
-      // Simulate containment progress
-      containment: fire.status === 'Active' 
-        ? Math.min(100, fire.containment + Math.random() * 2)
-        : fire.containment,
-      // Simulate acre changes for active fires
-      acres: fire.status === 'Active'
-        ? Math.round(fire.acres * (1 + (Math.random() - 0.3) * 0.01))
-        : fire.acres
-    }));
+    setIsLoading(true);
     
-    setFireData(updatedData);
+    try {
+      // Fetch real data from CAL FIRE API
+      const realData = await fetchActiveFiresGeoJson();
+      
+      if (realData && realData.length > 0) {
+        setFireData(realData);
+        logMapMutation('DATA_UPDATED', { 
+          source: 'CAL_FIRE_API',
+          fireCount: realData.length,
+          activeCount: realData.filter(f => f.status === 'Active').length 
+        });
+      } else {
+        // Fall back to static data if API fails
+        console.warn('No data from CAL FIRE API, using static data');
+        setFireData(staticFireData);
+        logMapMutation('FALLBACK_TO_STATIC', { 
+          reason: 'API returned no data',
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching CAL FIRE data:', error);
+      // Fall back to static data on error
+      setFireData(staticFireData);
+      logMapMutation('FALLBACK_TO_STATIC', { 
+        reason: 'API error',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+    
     setLastUpdate(new Date());
-    
-    logMapMutation('DATA_UPDATED', { 
-      fireCount: updatedData.length,
-      activeCount: updatedData.filter(f => f.status === 'Active').length 
-    });
+    setIsLoading(false);
   }, []);
 
   // Initialize map
@@ -293,10 +291,10 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
     // Initial data fetch
     fetchFireData();
 
-    // Set up real-time updates (every 30 seconds for demo, 5 minutes in production)
+    // Set up real-time updates (every 2 minutes for real API)
     const updateInterval = setInterval(() => {
       fetchFireData();
-    }, 30000); // 30 seconds for rapid testing
+    }, 2 * 60 * 1000); // 2 minutes
 
     // Cleanup
     return () => {
