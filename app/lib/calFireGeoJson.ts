@@ -160,26 +160,33 @@ function estimateStructures(acres: number, location: string): number {
  */
 export async function fetchActiveFiresGeoJson(): Promise<FireIncident[]> {
   try {
+    const fetchUrl = CAL_FIRE_GEOJSON_ACTIVE;
+    console.log('[FETCH] Starting fetch from:', fetchUrl);
+    
     logApiCall('FETCH_START', { 
-      url: CAL_FIRE_GEOJSON_ACTIVE,
+      url: fetchUrl,
       timestamp: new Date().toISOString() 
     });
     
     // Fetch ONLY active fires to avoid misleading data
-    const response = await fetch(CAL_FIRE_GEOJSON_ACTIVE, {
+    const response = await fetch(fetchUrl, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
         'Cache-Control': 'no-cache'
       },
-      cache: 'no-store'
+      cache: 'no-store',
+      mode: 'cors' // Explicitly set CORS mode
     });
+    
+    console.log('[FETCH] Response status:', response.status);
     
     if (!response.ok) {
       throw new Error(`API responded with status ${response.status}`);
     }
     
     const data: CalFireGeoJson = await response.json();
+    console.log('[FETCH] Data received, features count:', data.features?.length || 0);
     
     // Convert all features to FireIncident format
     const incidents = data.features.map(convertToFireIncident);

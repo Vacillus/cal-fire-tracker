@@ -17,6 +17,8 @@ export default function HomePage() {
   const [selectedFire, setSelectedFire] = useState<FireData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showHistorical, setShowHistorical] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Function to fetch fire data from CAL FIRE API
   const fetchFireData = useCallback(async () => {
@@ -29,30 +31,41 @@ export default function HomePage() {
     };
     
     console.log('[FIRE_DATA_MUTATION]', mutationLog);
+    setIsLoading(true);
+    setError(null);
     
     try {
       // Fetch real data from CAL FIRE API
+      console.log('[API] Fetching from CAL FIRE...');
       const apiData = await fetchActiveFiresGeoJson();
+      
+      console.log('[API] Response received:', apiData ? `${apiData.length} fires` : 'null/undefined');
       
       if (apiData && apiData.length > 0) {
         setFireData(apiData);
         setLastUpdate(new Date().toLocaleString());
         setUpdateCount(prev => prev + 1);
+        setError(null);
         
-        console.log('[CAL_FIRE_API] Updated with', apiData.length, 'fires');
+        console.log('[CAL_FIRE_API] Successfully loaded', apiData.length, 'fires');
+        console.log('[CAL_FIRE_API] First 3 fires:', apiData.slice(0, 3).map(f => f.name));
       } else {
-        // If API fails, show empty state (no misleading data)
-        console.warn('API failed - showing no fires');
+        // If no data returned
+        console.warn('API returned no fires');
+        setError('No fire data available from CAL FIRE');
         setFireData([]);
         setLastUpdate(new Date().toLocaleString());
         setUpdateCount(prev => prev + 1);
       }
-    } catch (error) {
-      console.error('Failed to fetch CAL FIRE data:', error);
-      // Show empty state on error
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+      console.error('Failed to fetch CAL FIRE data:', errorMsg);
+      setError(`Failed to load fires: ${errorMsg}`);
       setFireData([]);
-      setLastUpdate(new Date().toLocaleString());
+      setLastUpdate('Failed');
       setUpdateCount(prev => prev + 1);
+    } finally {
+      setIsLoading(false);
     }
     
     // Store mutation log in localStorage for forensic analysis
@@ -156,7 +169,21 @@ export default function HomePage() {
 
           {/* Fire List */}
           <div className="p-4 space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900">Active Fires ({activeFiresCount})</h2>
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <p className="text-red-700 text-sm">{error}</p>
+                <button 
+                  onClick={fetchFireData}
+                  className="mt-2 text-red-600 underline text-sm"
+                >
+                  Try again
+                </button>
+              </div>
+            )}
+            
+            <h2 className="text-lg font-semibold text-gray-900">
+              Active Fires ({isLoading ? '...' : activeFiresCount})
+            </h2>
             {fireData
               .filter(fire => fire.status === 'Active')
               .filter(fire => 
