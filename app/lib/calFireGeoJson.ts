@@ -61,10 +61,14 @@ export interface FireIncident {
   url?: string;
 }
 
-// CAL FIRE API endpoints
-const CAL_FIRE_GEOJSON_ACTIVE = 'https://incidents.fire.ca.gov/umbraco/api/IncidentApi/GeoJsonList?inactive=false';
-const CAL_FIRE_GEOJSON_ALL = 'https://incidents.fire.ca.gov/umbraco/api/IncidentApi/GeoJsonList?inactive=true';
-const CAL_FIRE_GEOJSON_YEAR = `https://incidents.fire.ca.gov/umbraco/api/IncidentApi/GeoJsonList?year=${new Date().getFullYear()}`;
+// CAL FIRE API endpoints - using CORS proxy for browser access
+const CORS_PROXY = 'https://corsproxy.io/?';
+const CAL_FIRE_BASE = 'https://incidents.fire.ca.gov/umbraco/api/IncidentApi/GeoJsonList';
+const CAL_FIRE_GEOJSON_ACTIVE = `${CORS_PROXY}${encodeURIComponent(CAL_FIRE_BASE + '?inactive=false')}`;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const CAL_FIRE_GEOJSON_ALL = `${CORS_PROXY}${encodeURIComponent(CAL_FIRE_BASE + '?inactive=true')}`;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const CAL_FIRE_GEOJSON_YEAR = `${CORS_PROXY}${encodeURIComponent(CAL_FIRE_BASE + `?year=${new Date().getFullYear()}`)}`;
 
 /**
  * Mutation logger for tracking API calls
@@ -160,23 +164,21 @@ function estimateStructures(acres: number, location: string): number {
  */
 export async function fetchActiveFiresGeoJson(): Promise<FireIncident[]> {
   try {
-    // Use our API route to bypass CORS
-    const fetchUrl = '/api/fires';
-    console.log('[FETCH] Starting fetch from our API route:', fetchUrl);
+    // Use CORS proxy to fetch CAL FIRE data
+    const fetchUrl = CAL_FIRE_GEOJSON_ACTIVE;
+    console.log('[FETCH] Starting fetch via CORS proxy');
     
     logApiCall('FETCH_START', { 
-      url: fetchUrl,
+      url: 'CAL_FIRE_API_via_proxy',
       timestamp: new Date().toISOString() 
     });
     
-    // Fetch from our own API endpoint (no CORS issues)
+    // Fetch through CORS proxy
     const response = await fetch(fetchUrl, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache'
-      },
-      cache: 'no-store'
+        'Accept': 'application/json'
+      }
     });
     
     console.log('[FETCH] Response status:', response.status);

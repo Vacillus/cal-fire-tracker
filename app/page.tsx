@@ -105,6 +105,7 @@ export default function HomePage() {
 
   const activeFiresCount = fireData.filter(f => f.status === 'Active').length;
   const totalAcres = fireData.reduce((sum, f) => sum + f.acres, 0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const totalPersonnel = fireData.reduce((sum, f) => sum + (f.personnel || 0), 0);
 
   return (
