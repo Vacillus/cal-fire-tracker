@@ -92,14 +92,18 @@ function logApiCall(action: string, data: unknown) {
 function convertToFireIncident(feature: CalFireGeoJsonFeature): FireIncident {
   const props = feature.properties;
   
-  // Determine status based on containment and active state
+  // Use CAL FIRE's IsActive flag as the source of truth
+  // If they say it's active, it's active - regardless of containment
   let status: 'Active' | 'Contained' | 'Controlled';
   if (props.ExtinguishedDate && props.ExtinguishedDate !== '') {
     status = 'Controlled';
-  } else if (props.PercentContained >= 95) {
-    status = 'Contained';
   } else if (props.IsActive === true) {
-    status = 'Active';
+    // Trust CAL FIRE - if they say active, it's active
+    if (props.PercentContained >= 98) {
+      status = 'Contained'; // Nearly out but still monitored
+    } else {
+      status = 'Active'; // Active fire needing resources
+    }
   } else {
     status = 'Controlled';
   }
@@ -183,13 +187,17 @@ export async function fetchActiveFiresGeoJson(): Promise<FireIncident[]> {
     // Sort by acres burned (largest first)
     incidents.sort((a, b) => b.acres - a.acres);
     
-    logApiCall('FETCH_SUCCESS', { 
+    const stats = {
       totalFires: incidents.length,
       activeFires: incidents.filter(f => f.status === 'Active').length,
       containedFires: incidents.filter(f => f.status === 'Contained').length,
       controlledFires: incidents.filter(f => f.status === 'Controlled').length,
-      totalAcres: incidents.reduce((sum, f) => sum + f.acres, 0)
-    });
+      totalAcres: incidents.reduce((sum, f) => sum + f.acres, 0),
+      sampleFires: incidents.slice(0, 3).map(f => `${f.name} (${f.status})`)
+    };
+    
+    logApiCall('FETCH_SUCCESS', stats);
+    console.log('[CAL_FIRE_API] Fire Statistics:', stats);
     
     return incidents;
     

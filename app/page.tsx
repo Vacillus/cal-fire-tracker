@@ -16,6 +16,7 @@ export default function HomePage() {
   const detailsPanelRef = useRef<HTMLDivElement>(null);
   const [selectedFire, setSelectedFire] = useState<FireData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showHistorical, setShowHistorical] = useState(false);
 
   // Function to fetch fire data from CAL FIRE API
   const fetchFireData = useCallback(async () => {
@@ -196,11 +197,39 @@ export default function HomePage() {
               ))}
 
             {activeFiresCount === 0 && (
-              <p className="text-gray-500 text-center py-8">No active fires to display</p>
+              <div className="text-center py-8">
+                <p className="text-gray-500">Loading active fires...</p>
+                <button 
+                  onClick={fetchFireData}
+                  className="mt-2 text-orange-600 hover:underline"
+                >
+                  Click to refresh
+                </button>
+              </div>
             )}
 
-            <h2 className="text-lg font-semibold text-gray-900 mt-8">Contained/Controlled Fires</h2>
-            {fireData
+            {/* Historical Data Section - Collapsible */}
+            <div className="mt-8 border-t pt-4">
+              <button
+                onClick={() => setShowHistorical(!showHistorical)}
+                className="flex items-center justify-between w-full text-left"
+              >
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Contained/Controlled Fires ({fireData.filter(f => f.status !== 'Active').length})
+                </h2>
+                <svg 
+                  className={`w-5 h-5 transform transition-transform ${showHistorical ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+            {showHistorical && (
+              <div className="mt-4 space-y-3">
+                {fireData
               .filter(fire => fire.status !== 'Active')
               .filter(fire => 
                 searchQuery === '' ||
@@ -227,6 +256,9 @@ export default function HomePage() {
                   </div>
                 </div>
               ))}
+              </div>
+            )}
+            </div>
           </div>
         </div>
       </div>
