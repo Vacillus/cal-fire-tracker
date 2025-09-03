@@ -38,7 +38,6 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
   const [showPerimeters, setShowPerimeters] = useState(true);
   const [fireData, setFireData] = useState<FireData[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-  const [isLoading, setIsLoading] = useState(true);
 
   // Fallback static data if API fails
   const staticFireData: FireData[] = [
@@ -199,8 +198,6 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
       timestamp: new Date().toISOString() 
     });
     
-    setIsLoading(true);
-    
     try {
       // Fetch real data from CAL FIRE API
       const realData = await fetchActiveFiresGeoJson();
@@ -232,7 +229,6 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
     }
     
     setLastUpdate(new Date());
-    setIsLoading(false);
   }, []);
 
   // Initialize map

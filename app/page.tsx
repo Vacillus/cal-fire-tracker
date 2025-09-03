@@ -26,10 +26,10 @@ interface FireData {
   acres: number;
   containment: number;
   status: 'Active' | 'Contained' | 'Controlled';
-  timestamp: string;
-  personnel: number;
-  structures_threatened: number;
-  evacuation_orders: boolean;
+  timestamp?: string;
+  personnel?: number;
+  structures_threatened?: number;
+  evacuation_orders?: boolean;
   started_date?: string;
   cause?: string;
 }
@@ -345,7 +345,7 @@ export default function Home() {
 
   const activeFiresCount = fireData.filter(f => f.status === 'Active').length;
   const totalAcres = fireData.reduce((sum, f) => sum + f.acres, 0);
-  const totalPersonnel = fireData.reduce((sum, f) => sum + f.personnel, 0);
+  const totalPersonnel = fireData.reduce((sum, f) => sum + (f.personnel || 0), 0);
 
   return (
     <div className="h-screen w-full flex flex-col bg-gray-100 overflow-hidden">
@@ -373,7 +373,6 @@ export default function Home() {
                 <div className="text-2xl font-bold">{totalPersonnel.toLocaleString()}</div>
                 <div className="text-sm text-orange-100">Personnel</div>
               </div>
-            </div>
             </div>
           </div>
         </div>

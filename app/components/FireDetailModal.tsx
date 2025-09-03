@@ -9,10 +9,10 @@ interface FireData {
   acres: number;
   containment: number;
   status: 'Active' | 'Contained' | 'Controlled';
-  timestamp: string;
-  personnel: number;
-  structures_threatened: number;
-  evacuation_orders: boolean;
+  timestamp?: string;
+  personnel?: number;
+  structures_threatened?: number;
+  evacuation_orders?: boolean;
   started_date?: string;
   cause?: string;
 }
@@ -78,14 +78,18 @@ export default function FireDetailModal({ fire, isOpen, onClose }: FireDetailMod
                       <span className="font-medium">Containment:</span> 
                       <span>{fire.containment}%</span>
                     </p>
-                    <p className="flex justify-between">
-                      <span className="font-medium">Personnel:</span> 
-                      <span>{fire.personnel.toLocaleString()}</span>
-                    </p>
-                    <p className="flex justify-between">
-                      <span className="font-medium">Structures Threatened:</span> 
-                      <span>{fire.structures_threatened.toLocaleString()}</span>
-                    </p>
+                    {fire.personnel && (
+                      <p className="flex justify-between">
+                        <span className="font-medium">Personnel:</span> 
+                        <span>{fire.personnel.toLocaleString()}</span>
+                      </p>
+                    )}
+                    {fire.structures_threatened !== undefined && (
+                      <p className="flex justify-between">
+                        <span className="font-medium">Structures Threatened:</span> 
+                        <span>{fire.structures_threatened.toLocaleString()}</span>
+                      </p>
+                    )}
                     {fire.evacuation_orders && (
                       <p className="flex items-center text-red-600">
                         <svg className="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
