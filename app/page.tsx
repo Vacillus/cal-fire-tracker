@@ -341,6 +341,12 @@ export default function Home() {
   const handleFireSelect = (fire: FireData) => {
     setSelectedFire(fire);
     setIsModalOpen(true);
+    // Zoom the map to the selected fire
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((window as any).zoomToFire) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).zoomToFire(fire.id);
+    }
   };
 
   const activeFiresCount = fireData.filter(f => f.status === 'Active').length;

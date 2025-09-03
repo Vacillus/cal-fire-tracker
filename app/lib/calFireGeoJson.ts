@@ -64,6 +64,7 @@ export interface FireIncident {
 // CAL FIRE API endpoints
 const CAL_FIRE_GEOJSON_ACTIVE = 'https://incidents.fire.ca.gov/umbraco/api/IncidentApi/GeoJsonList?inactive=false';
 const CAL_FIRE_GEOJSON_ALL = 'https://incidents.fire.ca.gov/umbraco/api/IncidentApi/GeoJsonList?inactive=true';
+const CAL_FIRE_GEOJSON_YEAR = `https://incidents.fire.ca.gov/umbraco/api/IncidentApi/GeoJsonList?year=${new Date().getFullYear()}`;
 
 /**
  * Mutation logger for tracking API calls
@@ -154,11 +155,12 @@ function estimateStructures(acres: number, location: string): number {
 export async function fetchActiveFiresGeoJson(): Promise<FireIncident[]> {
   try {
     logApiCall('FETCH_START', { 
-      url: CAL_FIRE_GEOJSON_ACTIVE,
+      url: CAL_FIRE_GEOJSON_YEAR,
       timestamp: new Date().toISOString() 
     });
     
-    const response = await fetch(CAL_FIRE_GEOJSON_ACTIVE, {
+    // Fetch ALL fires for the current year to show more data
+    const response = await fetch(CAL_FIRE_GEOJSON_YEAR, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
