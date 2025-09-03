@@ -257,6 +257,11 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
     
     mapInstanceRef.current = map;
     logMapMutation('MAP_INITIALIZED', { center: [36.7783, -119.4179], zoom: 6 });
+    
+    // Force map to recalculate its size
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
 
     // Base layers
     const terrainLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
@@ -539,9 +544,9 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
   }
 
   return (
-    <div className="h-full w-full flex flex-col relative">
+    <div className="absolute inset-0 flex flex-col">
       {/* Control Panel */}
-      <div className="absolute top-4 left-4 z-[1000] bg-white rounded-lg shadow-lg p-3">
+      <div className="absolute top-4 left-4 z-[2000] bg-white rounded-lg shadow-lg p-3">
         <div className="space-y-3">
           {/* Layer Controls */}
           <div>
@@ -598,7 +603,7 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
       </div>
 
       {/* Status Bar */}
-      <div className="absolute top-4 right-4 z-[1000] bg-white rounded-lg shadow-lg p-3">
+      <div className="absolute top-4 right-4 z-[2000] bg-white rounded-lg shadow-lg p-3">
         <div className="text-xs space-y-1">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -614,7 +619,7 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
       </div>
 
       {/* Legend */}
-      <div className="absolute bottom-4 left-4 z-[1000] bg-white rounded-lg shadow-lg p-3">
+      <div className="absolute bottom-4 left-4 z-[2000] bg-white rounded-lg shadow-lg p-3">
         <h4 className="text-sm font-semibold mb-2">Fire Status</h4>
         <div className="space-y-1 text-xs">
           <div className="flex items-center gap-2">
@@ -639,7 +644,7 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
       </div>
 
       {/* Map Container */}
-      <div ref={mapRef} className="flex-1 w-full" />
+      <div ref={mapRef} className="absolute inset-0" style={{ zIndex: 1 }} />
 
       {/* CSS for animations */}
       <style jsx global>{`

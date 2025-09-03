@@ -294,9 +294,9 @@ export default function Home() {
   const totalPersonnel = fireData.reduce((sum, f) => sum + f.personnel, 0);
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
+    <div className="h-screen w-full flex flex-col bg-gray-100 overflow-hidden">
       {/* Header */}
-      <header className="bg-gradient-to-r from-red-700 to-orange-600 text-white shadow-lg">
+      <header className="bg-gradient-to-r from-red-700 to-orange-600 text-white shadow-lg flex-shrink-0">
         <div className="px-6 py-4">
           <div className="flex justify-between items-center">
             <div>
@@ -333,9 +333,9 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col md:flex-row">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Map Section */}
-        <div className="flex-1 relative min-h-[50vh] md:min-h-0">
+        <div className="flex-1 relative h-full">
           {mapType === 'openstreet' ? (
             <OpenStreetFireMap 
               onFireSelect={(data) => {
@@ -363,7 +363,7 @@ export default function Home() {
         </div>
 
         {/* Fire List Sidebar */}
-        <div className="w-full md:w-96 bg-white shadow-lg overflow-y-auto max-h-[50vh] md:max-h-none">
+        <div className="w-full md:w-96 bg-white shadow-lg overflow-y-auto h-full flex-shrink-0">
           <div className="p-4 bg-gray-50 border-b">
             <h2 className="text-lg font-semibold text-gray-800">Active Incidents</h2>
             <p className="text-sm text-gray-600 mt-1">Click on a fire for details</p>

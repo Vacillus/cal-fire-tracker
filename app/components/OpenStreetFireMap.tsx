@@ -98,6 +98,11 @@ export default function OpenStreetFireMap({ onFireSelect }: OpenStreetFireMapPro
     }).setView([36.7783, -119.4179], 6);
     
     mapInstanceRef.current = map;
+    
+    // Force map to recalculate its size
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
 
     // Add OpenStreetMap tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -227,11 +232,11 @@ export default function OpenStreetFireMap({ onFireSelect }: OpenStreetFireMapPro
   }
 
   return (
-    <div className="h-full w-full relative">
-      <div ref={mapRef} className="h-full w-full" />
+    <div className="absolute inset-0">
+      <div ref={mapRef} className="absolute inset-0" />
       
       {/* Map Legend */}
-      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 z-[1000]">
+      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 z-[2000]">
         <h4 className="text-sm font-semibold mb-2">Fire Status</h4>
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -250,7 +255,7 @@ export default function OpenStreetFireMap({ onFireSelect }: OpenStreetFireMapPro
       </div>
 
       {/* Instructions */}
-      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-xs z-[1000]">
+      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-xs z-[2000]">
         <p className="text-xs text-gray-600">
           Click on fire markers to zoom & see details. Updates every 5 minutes from CAL FIRE.
         </p>
