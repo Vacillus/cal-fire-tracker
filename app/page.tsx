@@ -12,7 +12,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import OpenStreetFireMap from './components/OpenStreetFireMap';
 import EmbeddedFireMap from './components/EmbeddedFireMap';
 import FireDetailModal from './components/FireDetailModal';
 
@@ -38,7 +37,6 @@ export default function Home() {
   const [fireData, setFireData] = useState<FireData[]>([]);
   const [selectedFire, setSelectedFire] = useState<FireData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [mapType, setMapType] = useState<'openstreet' | 'embedded'>('openstreet');
   const [lastUpdate, setLastUpdate] = useState<string>(new Date().toLocaleString());
   const [updateCount, setUpdateCount] = useState<number>(0);
 
@@ -306,14 +304,7 @@ export default function Home() {
                 {updateCount > 0 && <span className="ml-2 text-xs">(#{updateCount})</span>}
               </p>
             </div>
-            <div className="flex gap-4 items-center">
-              <button
-                onClick={() => setMapType(mapType === 'openstreet' ? 'embedded' : 'openstreet')}
-                className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm transition-colors"
-              >
-                {mapType === 'openstreet' ? 'Switch to CAL FIRE Map' : 'Switch to Interactive Map'}
-              </button>
-              <div className="flex gap-6 text-right">
+            <div className="flex gap-6 text-right">
               <div>
                 <div className="text-2xl font-bold">{activeFiresCount}</div>
                 <div className="text-sm text-orange-100">Active Fires</div>
@@ -336,30 +327,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Map Section */}
         <div className="flex-1 relative h-full">
-          {mapType === 'openstreet' ? (
-            <OpenStreetFireMap 
-              onFireSelect={(data) => {
-                // Convert OpenStreetMap data format to match our FireData interface
-                const fireData: FireData = {
-                  id: data.id?.toString() || '',
-                  name: data.name || '',
-                  county: data.county || '',
-                  lat: data.lat || 0,
-                  lng: data.lng || 0,
-                  acres: data.acres || 0,
-                  containment: data.containment || 0,
-                  status: (data.status as 'Active' | 'Contained' | 'Controlled') || 'Active',
-                  timestamp: new Date().toLocaleString(),
-                  personnel: data.personnel || 0,
-                  structures_threatened: data.structures_threatened || 0,
-                  evacuation_orders: data.evacuation_orders || false
-                };
-                handleFireSelect(fireData);
-              }}
-            />
-          ) : (
-            <EmbeddedFireMap />
-          )}
+          <EmbeddedFireMap onFireSelect={handleFireSelect} />
         </div>
 
         {/* Fire List Sidebar */}
