@@ -49,7 +49,7 @@ export function logPerimeterMutation(
 
 /**
  * Generate a realistic fire perimeter polygon based on acres
- * Creates an irregular shape that looks like actual fire spread
+ * Creates a smooth, natural-looking fire boundary
  */
 export function generateFirePerimeter(
   centerLat: number,
@@ -58,29 +58,38 @@ export function generateFirePerimeter(
   windDirection: number = 0
 ): FirePerimeter {
   // Convert acres to approximate radius in degrees
-  // 1 acre ≈ 0.00156 square miles ≈ 0.0014 degrees² at equator
-  const baseRadius = Math.sqrt(acres * 0.0000014);
+  const areaInSqMeters = acres * 4047;
+  const radiusInMeters = Math.sqrt(areaInSqMeters / Math.PI);
+  const baseRadius = radiusInMeters / 111000;
   
-  // Generate irregular perimeter with more detail for larger fires
-  const numPoints = Math.min(64, Math.max(16, Math.floor(Math.sqrt(acres))));
+  const numPoints = 64; // More points for smoother curve
   const coordinates: number[][] = [];
   
+  // Generate smooth fire perimeter using harmonic functions
   for (let i = 0; i <= numPoints; i++) {
     const angle = (i / numPoints) * 2 * Math.PI;
     
-    // Add irregularity based on angle
-    const irregularity = 0.3 + Math.random() * 0.4; // 30-70% variation
+    // Create natural fire shape with multiple harmonics
+    // Primary shape - slightly elliptical
+    let radiusVariation = 1.0;
     
-    // Elongate in wind direction
-    const windEffect = 1 + 0.3 * Math.cos(angle - (windDirection * Math.PI / 180));
+    // Add large-scale variations (2-3 lobes)
+    radiusVariation += 0.15 * Math.sin(angle * 2 + Math.PI/4);
+    radiusVariation += 0.10 * Math.cos(angle * 3);
     
-    // Add fractal-like detail
-    const detail1 = 0.1 * Math.sin(angle * 3);
-    const detail2 = 0.05 * Math.sin(angle * 7);
-    const detail3 = 0.02 * Math.sin(angle * 13);
+    // Add medium-scale variations (finger-like projections)
+    radiusVariation += 0.05 * Math.sin(angle * 5);
+    radiusVariation += 0.03 * Math.cos(angle * 7);
     
-    const radius = baseRadius * irregularity * windEffect * (1 + detail1 + detail2 + detail3);
+    // Wind elongation effect
+    const windRad = windDirection * Math.PI / 180;
+    const windAlignment = Math.cos(angle - windRad);
+    const windEffect = 1 + 0.3 * windAlignment * Math.max(0, windAlignment);
     
+    // Final radius calculation
+    const radius = baseRadius * radiusVariation * windEffect;
+    
+    // Calculate position
     const lat = centerLat + radius * Math.sin(angle);
     const lng = centerLng + radius * Math.cos(angle) / Math.cos(centerLat * Math.PI / 180);
     
@@ -88,9 +97,8 @@ export function generateFirePerimeter(
   }
   
   // Ensure polygon is closed
-  if (coordinates.length > 0 && 
-      (coordinates[0][0] !== coordinates[coordinates.length - 1][0] ||
-       coordinates[0][1] !== coordinates[coordinates.length - 1][1])) {
+  if (coordinates[0][0] !== coordinates[coordinates.length - 1][0] ||
+      coordinates[0][1] !== coordinates[coordinates.length - 1][1]) {
     coordinates.push([...coordinates[0]]);
   }
   
@@ -110,33 +118,37 @@ export function generateDirectionCone(
   windDirection: number,
   windSpeed: number
 ): FirePerimeter {
-  const baseRadius = Math.sqrt(acres * 0.0000014);
+  const areaInSqMeters = acres * 4047;
+  const radiusInMeters = Math.sqrt(areaInSqMeters / Math.PI);
+  const baseRadius = radiusInMeters / 111000;
   
   // Cone extends in wind direction, length based on wind speed
-  const coneLength = baseRadius * (0.5 + windSpeed / 50); // Scale with wind
-  
+  const coneLength = baseRadius * (0.6 + windSpeed / 50);
   const windRad = windDirection * Math.PI / 180;
   
-  // Create arrow/cone shape
   const coordinates: number[][] = [];
+  const arcPoints = 30; // Smoother arc
+  const spreadAngle = Math.PI / 3; // 60 degree spread total
   
-  // Base of cone (at fire perimeter)
-  const basePoints = 5;
-  for (let i = 0; i <= basePoints; i++) {
-    const angle = windRad + Math.PI/2 - (i / basePoints) * Math.PI;
-    const radius = baseRadius * 0.8;
-    const lat = centerLat + radius * Math.sin(angle);
-    const lng = centerLng + radius * Math.cos(angle) / Math.cos(centerLat * Math.PI / 180);
+  // Start from fire center
+  coordinates.push([centerLng, centerLat]);
+  
+  // Create smooth parabolic arc for fire spread projection
+  for (let i = 0; i <= arcPoints; i++) {
+    const t = i / arcPoints;
+    const arcAngle = windRad - spreadAngle/2 + t * spreadAngle;
+    
+    // Parabolic distance falloff from center
+    const centeredness = 1 - Math.abs(t - 0.5) * 2;
+    const distance = coneLength * (0.7 + 0.3 * centeredness * centeredness);
+    
+    const lat = centerLat + distance * Math.sin(arcAngle);
+    const lng = centerLng + distance * Math.cos(arcAngle) / Math.cos(centerLat * Math.PI / 180);
     coordinates.push([lng, lat]);
   }
   
-  // Tip of cone (projection point)
-  const tipLat = centerLat + coneLength * Math.sin(windRad);
-  const tipLng = centerLng + coneLength * Math.cos(windRad) / Math.cos(centerLat * Math.PI / 180);
-  coordinates.push([tipLng, tipLat]);
-  
-  // Close the polygon
-  coordinates.push([...coordinates[0]]);
+  // Close polygon
+  coordinates.push([centerLng, centerLat]);
   
   return {
     type: 'Polygon',
@@ -154,36 +166,45 @@ export function generateThreatArea(
   windDirection: number,
   windSpeed: number
 ): FirePerimeter {
-  const baseRadius = Math.sqrt(acres * 0.0000014);
+  const areaInSqMeters = acres * 4047;
+  const radiusInMeters = Math.sqrt(areaInSqMeters / Math.PI);
+  const baseRadius = radiusInMeters / 111000;
   
   // Threat area extends beyond fire in wind direction
-  const threatDistance = baseRadius * (1.5 + windSpeed / 30);
-  const threatWidth = baseRadius * 1.2;
-  
   const windRad = windDirection * Math.PI / 180;
-  const coordinates: number[][] = [];
+  const threatExtension = baseRadius * (0.4 + windSpeed / 40);
   
-  // Generate elliptical threat area
-  const numPoints = 32;
+  const coordinates: number[][] = [];
+  const numPoints = 64; // Smooth ellipse
+  
   for (let i = 0; i <= numPoints; i++) {
     const angle = (i / numPoints) * 2 * Math.PI;
     
-    // Ellipse elongated in wind direction
-    const alongWind = Math.cos(angle - windRad);
-    const acrossWind = Math.sin(angle - windRad);
+    // Create smooth ellipse elongated in wind direction
+    const windAlignment = Math.cos(angle - windRad);
     
-    const radius = baseRadius + 
-      threatDistance * Math.max(0, alongWind) * 1.5 + // More extension in wind direction
-      threatWidth * Math.abs(acrossWind) * 0.5; // Some width across wind
+    // Elliptical parameters
+    const alongWindRadius = baseRadius * 1.5 + threatExtension * Math.max(0, windAlignment);
+    const acrossWindRadius = baseRadius * 1.2;
     
-    const lat = centerLat + radius * Math.sin(angle);
-    const lng = centerLng + radius * Math.cos(angle) / Math.cos(centerLat * Math.PI / 180);
+    // Smooth elliptical formula
+    const angleFromWind = angle - windRad;
+    const x = alongWindRadius * Math.cos(angleFromWind);
+    const y = acrossWindRadius * Math.sin(angleFromWind);
+    const radius = Math.sqrt(x * x + y * y);
+    
+    // Add slight organic variation
+    const variation = 1 + 0.05 * Math.sin(angle * 4);
+    
+    const lat = centerLat + radius * variation * Math.sin(angle);
+    const lng = centerLng + radius * variation * Math.cos(angle) / Math.cos(centerLat * Math.PI / 180);
     
     coordinates.push([lng, lat]);
   }
   
-  // Close polygon
-  if (coordinates.length > 0) {
+  // Ensure closed polygon
+  if (coordinates[0][0] !== coordinates[coordinates.length - 1][0] ||
+      coordinates[0][1] !== coordinates[coordinates.length - 1][1]) {
     coordinates.push([...coordinates[0]]);
   }
   
