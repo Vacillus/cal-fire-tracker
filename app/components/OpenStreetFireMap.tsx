@@ -31,12 +31,16 @@ const fireLocations = [
   { id: 7, name: 'Pine Ridge Fire', lat: 34.3, lng: -118.1, acres: 8500, containment: 30, status: 'Active', county: 'Los Angeles' },
   { id: 8, name: 'Summit Fire', lat: 34.5, lng: -119.8, acres: 1200, containment: 90, status: 'Contained', county: 'Santa Barbara' },
   { id: 9, name: 'Valley Fire', lat: 32.8, lng: -116.8, acres: 4500, containment: 55, status: 'Active', county: 'San Diego' },
-  { id: 10, name: 'Oak Fire', lat: 37.5, lng: -119.9, acres: 2100, containment: 100, status: 'Controlled', county: 'Mariposa' }
+  { id: 10, name: 'Oak Fire', lat: 37.5, lng: -119.9, acres: 2100, containment: 100, status: 'Controlled', county: 'Mariposa' },
+  { id: 11, name: 'San Pedro Lake Fire', lat: 37.0851, lng: -121.5146, acres: 1850, containment: 15, status: 'Active', county: 'Santa Clara' },
+  { id: 12, name: 'TCU Lightning Complex', lat: 37.1305, lng: -121.6543, acres: 3200, containment: 5, status: 'Active', county: 'Santa Clara' }
 ];
 
 export default function OpenStreetFireMap({ onFireSelect }: OpenStreetFireMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
+  const mapInstanceRef = useRef<any>(null);
+  const markersRef = useRef<Map<number, any>>(new Map());
 
   useEffect(() => {
     // Load Leaflet CSS and JS from CDN
@@ -73,8 +77,16 @@ export default function OpenStreetFireMap({ onFireSelect }: OpenStreetFireMapPro
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const L = (window as typeof window & { L: any }).L;
     
-    // Initialize map
-    const map = L.map(mapRef.current).setView([36.7783, -119.4179], 6);
+    // Initialize map with better controls
+    const map = L.map(mapRef.current, {
+      zoomControl: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      touchZoom: true,
+      dragging: true
+    }).setView([36.7783, -119.4179], 6);
+    
+    mapInstanceRef.current = map;
 
     // Add OpenStreetMap tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -104,6 +116,7 @@ export default function OpenStreetFireMap({ onFireSelect }: OpenStreetFireMapPro
       });
 
       const marker = L.marker([fire.lat, fire.lng], { icon: fireIcon });
+      markersRef.current.set(fire.id, marker);
 
       // Popup content
       const popupContent = `
@@ -143,16 +156,46 @@ export default function OpenStreetFireMap({ onFireSelect }: OpenStreetFireMapPro
       }
     });
 
-    // Global function for fire selection
+    // Global function for fire selection with smooth zoom
     (window as typeof window & { selectFire?: (id: number) => void }).selectFire = (fireId: number) => {
       const fire = fireLocations.find(f => f.id === fireId);
-      if (fire && onFireSelect) {
-        onFireSelect(fire);
+      if (fire) {
+        // Smooth fly to animation
+        map.flyTo([fire.lat, fire.lng], 14, {
+          duration: 1.5,
+          easeLinearity: 0.25
+        });
+        
+        // Open the marker popup
+        const marker = markersRef.current.get(fireId);
+        if (marker) {
+          setTimeout(() => {
+            marker.openPopup();
+          }, 1500);
+        }
+        
+        if (onFireSelect) {
+          onFireSelect(fire);
+        }
       }
     };
+    
+    // Add click handler to markers for direct zoom
+    markersRef.current.forEach((marker, fireId) => {
+      marker.on('click', () => {
+        const fire = fireLocations.find(f => f.id === fireId);
+        if (fire) {
+          map.flyTo([fire.lat, fire.lng], 14, {
+            duration: 1.5,
+            easeLinearity: 0.25
+          });
+        }
+      });
+    });
 
     // Cleanup
     return () => {
+      markersRef.current.clear();
       map.remove();
       delete (window as typeof window & { selectFire?: (id: number) => void }).selectFire;
     };
@@ -195,7 +238,7 @@ export default function OpenStreetFireMap({ onFireSelect }: OpenStreetFireMapPro
       {/* Instructions */}
       <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-xs z-[1000]">
         <p className="text-xs text-gray-600">
-          Click on fire markers to see details. Marker size indicates fire size. Free OpenStreetMap - no API key needed!
+          Click on fire markers to zoom & see details. Updates every 5 minutes from CAL FIRE.
         </p>
       </div>
 

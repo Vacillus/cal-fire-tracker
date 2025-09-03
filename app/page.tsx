@@ -40,8 +40,19 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mapType, setMapType] = useState<'openstreet' | 'embedded'>('openstreet');
   const [lastUpdate, setLastUpdate] = useState<string>(new Date().toLocaleString());
+  const [updateCount, setUpdateCount] = useState<number>(0);
 
   const fetchFireData = () => {
+    // Log mutation for tracking data updates
+    const mutationLog = {
+      timestamp: new Date().toISOString(),
+      action: 'FIRE_DATA_REFRESH',
+      updateNumber: updateCount + 1,
+      source: 'MOCK_DATA', // Will be 'CAL_FIRE_API' in production
+      fireCount: 12
+    };
+    console.log('[MUTATION LOG]', mutationLog);
+    
     // Mock fire data - in production this would come from CAL FIRE API
     const mockData: FireData[] = [
       {
@@ -225,22 +236,49 @@ export default function Home() {
         evacuation_orders: true,
         started_date: '2025-09-02',
         cause: 'Under Investigation'
+      },
+      {
+        id: '12',
+        name: 'TCU Lightning Complex',
+        county: 'Santa Clara',
+        city: 'San Pedro Reservoir',
+        lat: 37.1305,
+        lng: -121.6543,
+        acres: 3200,
+        containment: 5,
+        status: 'Active',
+        timestamp: new Date().toLocaleString(),
+        personnel: 450,
+        structures_threatened: 120,
+        evacuation_orders: true,
+        started_date: '2025-09-01',
+        cause: 'Lightning'
       }
     ];
     
     setFireData(mockData);
     setLastUpdate(new Date().toLocaleString());
+    setUpdateCount(prev => prev + 1);
+    
+    // Store mutation log in localStorage for forensic analysis
+    if (typeof window !== 'undefined') {
+      const logs = JSON.parse(localStorage.getItem('fireDataMutationLogs') || '[]');
+      logs.push(mutationLog);
+      // Keep only last 100 logs
+      if (logs.length > 100) logs.shift();
+      localStorage.setItem('fireDataMutationLogs', JSON.stringify(logs));
+    }
   };
 
   useEffect(() => {
     // Initial data fetch
     fetchFireData();
     
-    // Set up 30-minute interval for updates (30 * 60 * 1000 milliseconds)
+    // Set up 5-minute interval for updates (5 * 60 * 1000 milliseconds)
     const intervalId = setInterval(() => {
       fetchFireData();
-      console.log('Fire data updated at:', new Date().toLocaleString());
-    }, 30 * 60 * 1000);
+      console.log('[AUTO-UPDATE] Fire data refreshed at:', new Date().toLocaleString());
+    }, 5 * 60 * 1000);
     
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
@@ -263,7 +301,10 @@ export default function Home() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold">California Fire Tracker</h1>
-              <p className="text-orange-100 mt-1">Real-time wildfire monitoring • Last updated: {lastUpdate}</p>
+              <p className="text-orange-100 mt-1">
+                Real-time wildfire monitoring • Updates every 5 min • Last: {lastUpdate}
+                {updateCount > 0 && <span className="ml-2 text-xs">(#{updateCount})</span>}
+              </p>
             </div>
             <div className="flex gap-4 items-center">
               <button
