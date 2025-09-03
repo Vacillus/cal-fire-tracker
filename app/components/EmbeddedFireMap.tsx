@@ -2,6 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { fetchActiveFiresGeoJson, type FireIncident as FireData } from '../lib/calFireGeoJson';
+import { 
+  generateFireProjection, 
+  perimeterToLeafletCoords,
+  type FireProjection 
+} from '../lib/firePerimeterGenerator';
 
 interface EmbeddedFireMapProps {
   onFireSelect?: (data: FireData) => void;
@@ -35,9 +40,12 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const layerGroupRef = useRef<any>(null);
   const [selectedLayer, setSelectedLayer] = useState<'terrain' | 'satellite' | 'street'>('terrain');
-  const [showPerimeters, setShowPerimeters] = useState(true);
+  const [showActivePerimeter, setShowActivePerimeter] = useState(true);
+  const [showDirectionCone, setShowDirectionCone] = useState(true);
+  const [showThreatArea, setShowThreatArea] = useState(true);
   const [fireData, setFireData] = useState<FireData[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const perimeterLayersRef = useRef<Map<string, any>>(new Map());
 
   // Fallback static data if API fails
   const staticFireData: FireData[] = [
@@ -450,34 +458,128 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
       marker.addTo(layerGroup);
       markersRef.current.set(fire.id, marker);
 
-      // Add fire perimeter if enabled and fire is active
-      if (showPerimeters && isActive) {
-        // Calculate radius based on acres (rough approximation)
-        const radiusMeters = Math.sqrt(fire.acres * 4047); // Convert acres to square meters, then to radius
+      // Generate and add fire perimeter layers
+      if (isActive) {
+        const projection = generateFireProjection(
+          fire.id,
+          fire.lat,
+          fire.lng,
+          fire.acres
+        );
         
-        const perimeter = L.circle([fire.lat, fire.lng], {
-          color: color,
-          fillColor: color,
-          fillOpacity: 0.15,
-          weight: 2,
-          opacity: 0.5,
-          radius: radiusMeters
-        });
-
-        perimeter.bindTooltip(`${fire.name} perimeter`, { 
-          permanent: false, 
-          direction: 'top' 
-        });
-
-        perimeter.addTo(layerGroup);
+        // Active Fire Perimeter
+        if (showActivePerimeter) {
+          const perimeter = L.polygon(
+            perimeterToLeafletCoords(projection.perimeter),
+            {
+              color: '#A50026', // Darker red outline
+              fillColor: '#D73027', // Deep red fill
+              fillOpacity: 0.5, // 50% opacity
+              weight: 3, // Bold outline
+              className: 'active-fire-perimeter'
+            }
+          );
+          
+          perimeter.bindPopup(`
+            <div style="min-width: 200px;">
+              <h4 style="margin: 0 0 8px 0; font-weight: bold;">${fire.name} Perimeter</h4>
+              <div style="font-size: 12px; color: #666;">
+                <p><strong>Data Source:</strong> Generated from acres</p>
+                <p><strong>Last Update:</strong> ${projection.lastUpdate}</p>
+                <p><strong>Confidence:</strong> ${projection.confidence}%</p>
+                <p><strong>Area:</strong> ${fire.acres.toLocaleString()} acres</p>
+              </div>
+            </div>
+          `);
+          
+          perimeter.addTo(layerGroup);
+          perimeterLayersRef.current.set(`${fire.id}-perimeter`, perimeter);
+        }
+        
+        // Possible Fire Direction
+        if (showDirectionCone && projection.windData.speed > 5) {
+          const directionCone = L.polygon(
+            perimeterToLeafletCoords(projection.directionCone),
+            {
+              color: 'none', // No outline
+              fillColor: '#FEE08B', // Yellow to red gradient (simulated with yellow)
+              fillOpacity: 0.4, // 40% opacity
+              className: 'fire-direction-cone'
+            }
+          );
+          
+          // Create gradient effect with additional overlay
+          const gradientOverlay = L.polygon(
+            perimeterToLeafletCoords(projection.directionCone),
+            {
+              color: 'none',
+              fillColor: '#D73027', // Red overlay
+              fillOpacity: 0.2,
+              className: 'fire-direction-gradient'
+            }
+          );
+          
+          directionCone.bindPopup(`
+            <div style="min-width: 200px;">
+              <h4 style="margin: 0 0 8px 0; font-weight: bold;">Projected Spread</h4>
+              <div style="font-size: 12px; color: #666;">
+                <p><strong>Wind Direction:</strong> ${Math.round(projection.windData.direction)}°</p>
+                <p><strong>Wind Speed:</strong> ${Math.round(projection.windData.speed)} mph</p>
+                <p><strong>Confidence:</strong> ${projection.confidence}%</p>
+                <p><strong>Based on:</strong> Current wind conditions</p>
+              </div>
+            </div>
+          `);
+          
+          directionCone.addTo(layerGroup);
+          gradientOverlay.addTo(layerGroup);
+          perimeterLayersRef.current.set(`${fire.id}-direction`, directionCone);
+        }
+        
+        // Possible Threat Area
+        if (showThreatArea) {
+          // Create hatched pattern with CSS
+          const threatArea = L.polygon(
+            perimeterToLeafletCoords(projection.threatArea),
+            {
+              color: '#F46D43', // Darker orange outline
+              fillColor: '#FDAE61', // Orange fill
+              fillOpacity: 0.3, // 30% opacity
+              weight: 2,
+              dashArray: '5, 10', // Dashed outline
+              className: 'threat-area-hatched'
+            }
+          );
+          
+          threatArea.bindPopup(`
+            <div style="min-width: 200px;">
+              <h4 style="margin: 0 0 8px 0; font-weight: bold;">Threat Area</h4>
+              <div style="font-size: 12px; color: #666;">
+                <p><strong>Risk Level:</strong> ${fire.evacuation_orders ? 'High' : 'Moderate'}</p>
+                <p><strong>Projection Window:</strong> Next 12-24 hours</p>
+                <p><strong>Confidence:</strong> ${Math.round(projection.confidence * 0.8)}%</p>
+                <p><strong>Factors:</strong> Wind, terrain, fuel load</p>
+              </div>
+            </div>
+          `);
+          
+          // Add to back of layer group (below other layers)
+          layerGroup.addLayer(threatArea);
+          threatArea.bringToBack();
+          perimeterLayersRef.current.set(`${fire.id}-threat`, threatArea);
+        }
       }
     });
 
     logMapMutation('MARKERS_UPDATED', { 
       markerCount: markersRef.current.size,
-      showPerimeters 
+      layers: {
+        activePerimeter: showActivePerimeter,
+        directionCone: showDirectionCone,
+        threatArea: showThreatArea
+      }
     });
-  }, [fireData, showPerimeters, onFireSelect]);
+  }, [fireData, showActivePerimeter, showDirectionCone, showThreatArea, onFireSelect]);
 
   // Global zoom function
   useEffect(() => {
@@ -579,19 +681,69 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
             </div>
           </div>
 
-          {/* Perimeter Toggle */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="perimeters"
-              checked={showPerimeters}
-              onChange={(e) => {
-                setShowPerimeters(e.target.checked);
-                logMapMutation('PERIMETERS_TOGGLED', { enabled: e.target.checked });
-              }}
-              className="rounded"
-            />
-            <label htmlFor="perimeters" className="text-xs">Show Fire Perimeters</label>
+          {/* Layer Toggles */}
+          <div className="space-y-2 mt-3 pt-3 border-t">
+            <h4 className="text-xs font-semibold">Fire Layers</h4>
+            
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="active-perimeter"
+                checked={showActivePerimeter}
+                onChange={(e) => {
+                  setShowActivePerimeter(e.target.checked);
+                  logMapMutation('LAYER_TOGGLED', { 
+                    layer: 'active_perimeter', 
+                    enabled: e.target.checked 
+                  });
+                }}
+                className="rounded w-3 h-3"
+              />
+              <label htmlFor="active-perimeter" className="text-xs flex items-center gap-1">
+                <span className="w-3 h-3 bg-red-600 border border-red-800"></span>
+                Perimeter
+              </label>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="direction-cone"
+                checked={showDirectionCone}
+                onChange={(e) => {
+                  setShowDirectionCone(e.target.checked);
+                  logMapMutation('LAYER_TOGGLED', { 
+                    layer: 'direction_cone', 
+                    enabled: e.target.checked 
+                  });
+                }}
+                className="rounded w-3 h-3"
+              />
+              <label htmlFor="direction-cone" className="text-xs flex items-center gap-1">
+                <span className="w-3 h-3 bg-gradient-to-r from-yellow-400 to-red-500"></span>
+                Spread
+              </label>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="threat-area"
+                checked={showThreatArea}
+                onChange={(e) => {
+                  setShowThreatArea(e.target.checked);
+                  logMapMutation('LAYER_TOGGLED', { 
+                    layer: 'threat_area', 
+                    enabled: e.target.checked 
+                  });
+                }}
+                className="rounded w-3 h-3"
+              />
+              <label htmlFor="threat-area" className="text-xs flex items-center gap-1">
+                <span className="w-3 h-3 bg-orange-400 border border-orange-600 border-dashed"></span>
+                Threat
+              </label>
+            </div>
           </div>
         </div>
       </div>
@@ -628,10 +780,27 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
             <div className="w-4 h-4 bg-green-500 rounded-full"></div>
             <span>Controlled</span>
           </div>
-          {showPerimeters && (
-            <div className="flex items-center gap-2 pt-1 border-t">
-              <div className="w-4 h-4 border-2 border-red-500 rounded-full opacity-30"></div>
-              <span>Perimeter</span>
+          {(showActivePerimeter || showDirectionCone || showThreatArea) && (
+            <div className="pt-1 mt-1 border-t space-y-1">
+              <div className="text-xs font-semibold">Layers:</div>
+              {showActivePerimeter && (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-red-600 bg-opacity-50 border-2 border-red-800"></div>
+                  <span className="text-xs">Perimeter</span>
+                </div>
+              )}
+              {showDirectionCone && (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-gradient-to-r from-yellow-400 to-red-500 opacity-40"></div>
+                  <span className="text-xs">Spread</span>
+                </div>
+              )}
+              {showThreatArea && (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-orange-400 bg-opacity-30 border border-orange-600 border-dashed"></div>
+                  <span className="text-xs">Threat</span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -640,7 +809,7 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
       {/* Map Container */}
       <div ref={mapRef} className="absolute inset-0" style={{ zIndex: 1 }} />
 
-      {/* CSS for animations */}
+      {/* CSS for animations and patterns */}
       <style jsx global>{`
         @keyframes pulse {
           0% {
@@ -659,6 +828,24 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
         
         .active-fire {
           animation: pulse 2s infinite;
+        }
+        
+        .active-fire-perimeter {
+          filter: drop-shadow(0 0 4px rgba(165, 0, 38, 0.5));
+        }
+        
+        .fire-direction-cone {
+          mix-blend-mode: multiply;
+        }
+        
+        .threat-area-hatched {
+          background-image: repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 10px,
+            rgba(253, 174, 97, 0.1) 10px,
+            rgba(253, 174, 97, 0.1) 20px
+          );
         }
         
         .custom-popup .leaflet-popup-content-wrapper {
