@@ -362,22 +362,28 @@ export default function Home() {
             <div>
               <h1 className="text-3xl font-bold">California Fire Tracker</h1>
               <p className="text-orange-100 mt-1">
-                Real-time wildfire monitoring • Updates every 5 min • Last: {lastUpdate}
+                Real-time wildfire monitoring • Updates every 2 min • Last: {lastUpdate}
                 {updateCount > 0 && <span className="ml-2 text-xs">(#{updateCount})</span>}
               </p>
             </div>
-            <div className="flex gap-6 text-right">
+            <div className="flex gap-6 text-right items-center">
+              <button 
+                onClick={fetchFireData}
+                className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-sm font-medium"
+              >
+                🔄 Refresh Data
+              </button>
+              <div>
+                <div className="text-2xl font-bold">{fireData.length}</div>
+                <div className="text-sm text-orange-100">Total Fires</div>
+              </div>
               <div>
                 <div className="text-2xl font-bold">{activeFiresCount}</div>
-                <div className="text-sm text-orange-100">Active Fires</div>
+                <div className="text-sm text-orange-100">Active</div>
               </div>
               <div>
                 <div className="text-2xl font-bold">{(totalAcres / 1000).toFixed(0)}K</div>
-                <div className="text-sm text-orange-100">Total Acres</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{totalPersonnel.toLocaleString()}</div>
-                <div className="text-sm text-orange-100">Personnel</div>
+                <div className="text-sm text-orange-100">Acres</div>
               </div>
             </div>
           </div>
