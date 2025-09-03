@@ -44,8 +44,11 @@ function logMapMutation(action: string, data: unknown) {
 export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapInstanceRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markersRef = useRef<Map<string, any>>(new Map());
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const layerGroupRef = useRef<any>(null);
   const [selectedLayer, setSelectedLayer] = useState<'terrain' | 'satellite' | 'street'>('terrain');
   const [showPerimeters, setShowPerimeters] = useState(true);
@@ -186,6 +189,7 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
       }
 
       // Load JS
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (!(window as any).L) {
         const script = document.createElement('script');
         script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
@@ -200,6 +204,7 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
     };
 
     loadLeaflet();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch and update fire data
@@ -236,6 +241,7 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
   useEffect(() => {
     if (!mapLoaded || !mapRef.current || mapInstanceRef.current) return;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const L = (window as any).L;
     
     // Initialize map with better controls and smooth scrolling
@@ -269,6 +275,7 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
     terrainLayer.addTo(map);
 
     // Store layers for switching
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).mapLayers = {
       terrain: terrainLayer,
       satellite: satelliteLayer,
@@ -299,6 +306,7 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
   useEffect(() => {
     if (!mapInstanceRef.current || !layerGroupRef.current || fireData.length === 0) return;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const L = (window as any).L;
     const layerGroup = layerGroupRef.current;
 
@@ -474,6 +482,7 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
 
   // Global zoom function
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).zoomToFire = (fireId: string) => {
       const fire = fireData.find(f => f.id === fireId);
       if (fire && mapInstanceRef.current) {
@@ -492,6 +501,7 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
     };
 
     return () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (window as any).zoomToFire;
     };
   }, [fireData]);
@@ -500,10 +510,12 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
   const switchLayer = (layerType: 'terrain' | 'satellite' | 'street') => {
     if (!mapInstanceRef.current) return;
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const layers = (window as any).mapLayers;
     if (!layers) return;
 
     // Remove all base layers
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Object.values(layers).forEach((layer: any) => {
       mapInstanceRef.current.removeLayer(layer);
     });
