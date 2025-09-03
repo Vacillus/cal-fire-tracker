@@ -160,23 +160,23 @@ function estimateStructures(acres: number, location: string): number {
  */
 export async function fetchActiveFiresGeoJson(): Promise<FireIncident[]> {
   try {
-    const fetchUrl = CAL_FIRE_GEOJSON_ACTIVE;
-    console.log('[FETCH] Starting fetch from:', fetchUrl);
+    // Use our API route to bypass CORS
+    const fetchUrl = '/api/fires';
+    console.log('[FETCH] Starting fetch from our API route:', fetchUrl);
     
     logApiCall('FETCH_START', { 
       url: fetchUrl,
       timestamp: new Date().toISOString() 
     });
     
-    // Fetch ONLY active fires to avoid misleading data
+    // Fetch from our own API endpoint (no CORS issues)
     const response = await fetch(fetchUrl, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
         'Cache-Control': 'no-cache'
       },
-      cache: 'no-store',
-      mode: 'cors' // Explicitly set CORS mode
+      cache: 'no-store'
     });
     
     console.log('[FETCH] Response status:', response.status);
