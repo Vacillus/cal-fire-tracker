@@ -26,7 +26,7 @@ export interface FireProjection {
 export function logPerimeterMutation(
   action: 'perimeter_update' | 'projection_update' | 'threat_area_update',
   fireId: string,
-  data: any
+  data: unknown
 ) {
   const mutation = {
     timestamp: new Date().toISOString(),
@@ -114,7 +114,6 @@ export function generateDirectionCone(
   
   // Cone extends in wind direction, length based on wind speed
   const coneLength = baseRadius * (0.5 + windSpeed / 50); // Scale with wind
-  const coneWidth = baseRadius * 0.3; // 30% of fire radius
   
   const windRad = windDirection * Math.PI / 180;
   
@@ -198,7 +197,7 @@ export function generateThreatArea(
  * Calculate wind data based on location and time
  * In production, this would call a weather API
  */
-export function calculateWindData(lat: number, lng: number): WindData {
+export function calculateWindData(lat: number): WindData {
   // Mock wind data - in production use weather API
   const baseWind = {
     speed: 10 + Math.random() * 20, // 10-30 mph
@@ -233,7 +232,7 @@ export function generateFireProjection(
   centerLng: number,
   acres: number
 ): FireProjection {
-  const windData = calculateWindData(centerLat, centerLng);
+  const windData = calculateWindData(centerLat);
   
   // Generate all polygon layers
   const perimeter = generateFirePerimeter(centerLat, centerLng, acres, windData.direction);
