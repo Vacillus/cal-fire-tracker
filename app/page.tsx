@@ -4,20 +4,22 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import FireDetailModal from './components/FireDetailModal';
 import EmbeddedFireMap from './components/EmbeddedFireMap';
 import { fetchActiveFiresGeoJson, type FireIncident } from './lib/calFireGeoJson';
+import { EMBEDDED_FIRE_DATA } from './lib/embeddedFireData';
 
 // Use the same type as the API returns
 type FireData = FireIncident;
 
 export default function HomePage() {
-  const [fireData, setFireData] = useState<FireData[]>([]);
+  // Start with embedded data for instant loading
+  const [fireData, setFireData] = useState<FireData[]>(EMBEDDED_FIRE_DATA);
   const [updateCount, setUpdateCount] = useState(0);
-  const [lastUpdate, setLastUpdate] = useState<string>('Loading...');
+  const [lastUpdate, setLastUpdate] = useState<string>('Embedded data loaded');
   const [searchQuery, setSearchQuery] = useState('');
   const detailsPanelRef = useRef<HTMLDivElement>(null);
   const [selectedFire, setSelectedFire] = useState<FireData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showHistorical, setShowHistorical] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Start false since we have data
   const [error, setError] = useState<string | null>(null);
 
   // Function to fetch fire data from CAL FIRE API
@@ -82,11 +84,11 @@ export default function HomePage() {
     // Initial data fetch
     fetchFireData();
     
-    // Set up 2-minute interval for updates from real API
+    // Set up 10-minute interval for updates from real API (less aggressive)
     const intervalId = setInterval(() => {
       fetchFireData();
       console.log('[AUTO-UPDATE] Fire data refreshed from CAL FIRE API at:', new Date().toLocaleString());
-    }, 2 * 60 * 1000); // 2 minutes
+    }, 10 * 60 * 1000); // 10 minutes
     
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
@@ -117,7 +119,7 @@ export default function HomePage() {
             <div>
               <h1 className="text-3xl font-bold">California Fire Tracker</h1>
               <p className="text-orange-100 mt-1">
-                Real-time wildfire monitoring • Updates every 2 min • Last: {lastUpdate}
+                Real-time wildfire monitoring • Updates every 10 min • Last: {lastUpdate}
                 {updateCount > 0 && <span className="ml-2 text-xs">(#{updateCount})</span>}
               </p>
             </div>

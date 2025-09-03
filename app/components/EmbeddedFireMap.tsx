@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { fetchActiveFiresGeoJson, type FireIncident as FireData } from '../lib/calFireGeoJson';
+import { EMBEDDED_FIRE_DATA } from '../lib/embeddedFireData';
 import { 
   generateFireProjection, 
   perimeterToLeafletCoords
@@ -42,7 +43,7 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
   const [showActivePerimeter, setShowActivePerimeter] = useState(true);
   const [showDirectionCone, setShowDirectionCone] = useState(true);
   const [showThreatArea, setShowThreatArea] = useState(true);
-  const [fireData, setFireData] = useState<FireData[]>([]);
+  const [fireData, setFireData] = useState<FireData[]>(EMBEDDED_FIRE_DATA);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const perimeterLayersRef = useRef<Map<string, any>>(new Map());
