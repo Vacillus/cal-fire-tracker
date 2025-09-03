@@ -36,11 +36,22 @@ const fireLocations = [
   { id: 12, name: 'TCU Lightning Complex', lat: 37.1305, lng: -121.6543, acres: 3200, containment: 5, status: 'Active', county: 'Santa Clara' }
 ];
 
+// Leaflet type declaration
+interface LeafletMap {
+  flyTo: (coords: [number, number], zoom: number, options?: object) => void;
+  remove: () => void;
+}
+
+interface LeafletMarker {
+  openPopup: () => void;
+  on: (event: string, handler: () => void) => void;
+}
+
 export default function OpenStreetFireMap({ onFireSelect }: OpenStreetFireMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
-  const mapInstanceRef = useRef<any>(null);
-  const markersRef = useRef<Map<number, any>>(new Map());
+  const mapInstanceRef = useRef<LeafletMap | null>(null);
+  const markersRef = useRef<Map<number, LeafletMarker>>(new Map());
 
   useEffect(() => {
     // Load Leaflet CSS and JS from CDN
@@ -195,10 +206,13 @@ export default function OpenStreetFireMap({ onFireSelect }: OpenStreetFireMapPro
 
     // Cleanup
     return () => {
-      markersRef.current.clear();
+      // Copy refs to avoid stale closure issues
+      const markers = markersRef.current;
+      markers.clear();
       map.remove();
       delete (window as typeof window & { selectFire?: (id: number) => void }).selectFire;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leafletLoaded, onFireSelect]);
 
   if (!leafletLoaded) {

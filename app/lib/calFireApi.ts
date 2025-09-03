@@ -23,12 +23,19 @@ export interface CalFireIncident {
 
 // CAL FIRE RSS Feed URL (public, no API key required)
 const CAL_FIRE_RSS = 'https://www.fire.ca.gov/umbraco/api/IncidentApi/List';
-const INCIWEB_API = 'https://inciweb.nwcg.gov/feeds/json/esri/';
+
+interface MutationLog {
+  timestamp: string;
+  action: string;
+  data: unknown;
+  source: string;
+  environment: string | undefined;
+}
 
 /**
  * Mutation logger for tracking all data fetches
  */
-function logMutation(action: string, data: any) {
+function logMutation(action: string, data: unknown): MutationLog {
   const mutation = {
     timestamp: new Date().toISOString(),
     action,
@@ -73,23 +80,29 @@ export async function fetchCalFireData(): Promise<CalFireIncident[]> {
     const data = await response.json();
     
     // Transform CAL FIRE data to our format
-    const incidents: CalFireIncident[] = data.map((incident: any) => ({
-      id: incident.UniqueId || incident.Name,
-      name: incident.Name,
-      county: incident.County || incident.Counties?.split('/')[0] || 'Unknown',
-      location: incident.Location,
-      latitude: parseFloat(incident.Latitude) || 0,
-      longitude: parseFloat(incident.Longitude) || 0,
-      acres_burned: parseInt(incident.AcresBurned) || 0,
-      containment_percent: parseInt(incident.PercentContained) || 0,
-      status: incident.IsActive ? 'Active' : 'Contained',
-      updated_at: incident.Updated || new Date().toISOString(),
-      personnel_involved: parseInt(incident.PersonnelInvolved) || 0,
-      structures_threatened: parseInt(incident.StructuresThreatened) || 0,
-      evacuation_orders: incident.EvacuationInfo?.includes('Evacuation') || false,
-      started_date: incident.Started,
-      cause: incident.Cause
-    }));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const incidents: CalFireIncident[] = data.map((incident: Record<string, any>) => {
+      const counties = incident.Counties as string | undefined;
+      const evacuationInfo = incident.EvacuationInfo as string | undefined;
+      
+      return {
+        id: (incident.UniqueId as string) || (incident.Name as string),
+        name: incident.Name as string,
+        county: (incident.County as string) || counties?.split('/')[0] || 'Unknown',
+        location: incident.Location as string | undefined,
+        latitude: parseFloat(incident.Latitude as string) || 0,
+        longitude: parseFloat(incident.Longitude as string) || 0,
+        acres_burned: parseInt(incident.AcresBurned as string) || 0,
+        containment_percent: parseInt(incident.PercentContained as string) || 0,
+        status: incident.IsActive ? 'Active' : 'Contained',
+        updated_at: (incident.Updated as string) || new Date().toISOString(),
+        personnel_involved: parseInt(incident.PersonnelInvolved as string) || 0,
+        structures_threatened: parseInt(incident.StructuresThreatened as string) || 0,
+        evacuation_orders: evacuationInfo?.includes('Evacuation') || false,
+        started_date: incident.Started as string | undefined,
+        cause: incident.Cause as string | undefined
+      };
+    });
     
     logMutation('FETCH_SUCCESS', { 
       incidentCount: incidents.length,
@@ -107,10 +120,28 @@ export async function fetchCalFireData(): Promise<CalFireIncident[]> {
   }
 }
 
+interface FireData {
+  id: string;
+  name: string;
+  county: string;
+  city?: string;
+  lat: number;
+  lng: number;
+  acres: number;
+  containment: number;
+  status: 'Active' | 'Contained' | 'Controlled';
+  timestamp: string;
+  personnel: number;
+  structures_threatened: number;
+  evacuation_orders: boolean;
+  started_date?: string;
+  cause?: string;
+}
+
 /**
  * Transform CAL FIRE data to match our FireData interface
  */
-export function transformToFireData(incident: CalFireIncident): any {
+export function transformToFireData(incident: CalFireIncident): FireData {
   return {
     id: incident.id,
     name: incident.name,
@@ -175,7 +206,7 @@ export async function fetchAllFireData(): Promise<CalFireIncident[]> {
 /**
  * Get mutation logs for debugging
  */
-export function getMutationLogs(): any[] {
+export function getMutationLogs(): MutationLog[] {
   if (typeof window === 'undefined') return [];
   
   const logs = localStorage.getItem('calFireMutations');

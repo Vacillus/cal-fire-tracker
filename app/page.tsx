@@ -11,7 +11,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import OpenStreetFireMap from './components/OpenStreetFireMap';
 import EmbeddedFireMap from './components/EmbeddedFireMap';
 import FireDetailModal from './components/FireDetailModal';
@@ -42,7 +42,7 @@ export default function Home() {
   const [lastUpdate, setLastUpdate] = useState<string>(new Date().toLocaleString());
   const [updateCount, setUpdateCount] = useState<number>(0);
 
-  const fetchFireData = () => {
+  const fetchFireData = useCallback(() => {
     // Log mutation for tracking data updates
     const mutationLog = {
       timestamp: new Date().toISOString(),
@@ -268,7 +268,7 @@ export default function Home() {
       if (logs.length > 100) logs.shift();
       localStorage.setItem('fireDataMutationLogs', JSON.stringify(logs));
     }
-  };
+  }, [updateCount]);
 
   useEffect(() => {
     // Initial data fetch
@@ -282,7 +282,7 @@ export default function Home() {
     
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
-  }, []);
+  }, [fetchFireData]);
 
   const handleFireSelect = (fire: FireData) => {
     setSelectedFire(fire);
