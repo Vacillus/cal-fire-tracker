@@ -47,7 +47,7 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const perimeterLayersRef = useRef<Map<string, any>>(new Map());
 
-  // Fallback static data if API fails
+  // No static fallback data - only show real fires
   const staticFireData: FireData[] = [
     {
       id: '1',
@@ -219,7 +219,7 @@ export default function EmbeddedFireMap({ onFireSelect }: EmbeddedFireMapProps) 
       } else {
         // Fall back to static data if API fails
         console.warn('No data from CAL FIRE API, using static data');
-        setFireData(staticFireData);
+        setFireData([]);
         logMapMutation('FALLBACK_TO_STATIC', { 
           reason: 'API returned no data',
           timestamp: new Date().toISOString()

@@ -94,12 +94,14 @@ function convertToFireIncident(feature: CalFireGeoJsonFeature): FireIncident {
   
   // Determine status based on containment and active state
   let status: 'Active' | 'Contained' | 'Controlled';
-  if (!props.IsActive || props.ExtinguishedDate) {
+  if (props.ExtinguishedDate && props.ExtinguishedDate !== '') {
     status = 'Controlled';
   } else if (props.PercentContained >= 95) {
     status = 'Contained';
-  } else {
+  } else if (props.IsActive === true) {
     status = 'Active';
+  } else {
+    status = 'Controlled';
   }
   
   return {
@@ -155,12 +157,12 @@ function estimateStructures(acres: number, location: string): number {
 export async function fetchActiveFiresGeoJson(): Promise<FireIncident[]> {
   try {
     logApiCall('FETCH_START', { 
-      url: CAL_FIRE_GEOJSON_YEAR,
+      url: CAL_FIRE_GEOJSON_ACTIVE,
       timestamp: new Date().toISOString() 
     });
     
-    // Fetch ALL fires for the current year to show more data
-    const response = await fetch(CAL_FIRE_GEOJSON_YEAR, {
+    // Fetch ONLY active fires to avoid misleading data
+    const response = await fetch(CAL_FIRE_GEOJSON_ACTIVE, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
